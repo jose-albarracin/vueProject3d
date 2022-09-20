@@ -5,6 +5,8 @@ import Home from "@/views/Home.vue";
 import ExampleOne from "@/views/exampleOne.vue";
 import ExampleTwo from "@/views/exampleTwo.vue";
 import ExampleThree from "@/views/exampleThree.vue";
+import ExampleFour from "@/views/exampleFour.vue";
+import lottieExample0 from "@/views/lottieExample0.vue";
 
 //Vue.use(VueRouter);
 
@@ -28,6 +30,16 @@ const routes = [
     path: "/examplethree",
     name: "examplethree",
     component: ExampleThree,
+  },
+  {
+    path: "/examplefour",
+    name: "examplefour",
+    component: ExampleFour,
+  },
+  {
+    path: "/lottieexample0",
+    name: "lottieexample0",
+    component: lottieExample0,
   },
 ];
 
