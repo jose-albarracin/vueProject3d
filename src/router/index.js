@@ -7,6 +7,8 @@ import ExampleTwo from "@/views/exampleTwo.vue";
 import ExampleThree from "@/views/exampleThree.vue";
 import ExampleFour from "@/views/exampleFour.vue";
 import lottieExample0 from "@/views/lottieExample0.vue";
+import videoPlayerExample from "@/views/videoPlayerExample.vue";
+import audioPlayerExample from "@/views/audioPlayerExample.vue";
 
 //Vue.use(VueRouter);
 
@@ -40,6 +42,16 @@ const routes = [
     path: "/lottieexample0",
     name: "lottieexample0",
     component: lottieExample0,
+  },
+  {
+    path: "/videoplayerexample",
+    name: "videoplayerexample",
+    component: videoPlayerExample,
+  },
+  {
+    path: "/audioplayerexample",
+    name: "audioplayerexample",
+    component: audioPlayerExample,
   },
 ];
 

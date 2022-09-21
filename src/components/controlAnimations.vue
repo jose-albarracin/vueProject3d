@@ -7,11 +7,10 @@
       @click="
         () => {
           backward = true;
-          /* if (type == 'lottieFiles') {
-            controlsLottie();
-          } */
 
           type == 'lottieFiles' && controlsLottie();
+          type == 'videoPlayer' && controlsVideoPlayer();
+          type == 'audioPlayer' && controlsAudioPlayer();
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -23,6 +22,8 @@
         () => {
           forward = true;
           type == 'lottieFiles' && controlsLottie();
+          type == 'videoPlayer' && controlsVideoPlayer();
+          type == 'audioPlayer' && controlsAudioPlayer();
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -35,6 +36,8 @@
         () => {
           pause = true;
           type == 'lottieFiles' && controlsLottie();
+          type == 'videoPlayer' && controlsVideoPlayer();
+          type == 'audioPlayer' && controlsAudioPlayer();
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -46,6 +49,8 @@
         () => {
           play = true;
           type == 'lottieFiles' && controlsLottie();
+          type == 'videoPlayer' && controlsVideoPlayer();
+          type == 'audioPlayer' && controlsAudioPlayer();
         }
       "
       class="bg-blue-400 h-fit text-white hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -88,6 +93,8 @@ export default {
       valuePercentaje: undefined,
       isNewTime: false,
       lottieAnimation: undefined,
+      myVideo: undefined,
+      myAudio: undefined,
     };
   },
   methods: {
@@ -249,6 +256,21 @@ export default {
         let newFrame = totalFrames * (this.valuePercentaje / 100);
         this.lottieAnimation.goToAndPlay(newFrame, true);
       }
+
+      if (this.type == "videoPlayer") {
+        let duration = this.myVideo.duration;
+
+        let newTime = duration * (this.valuePercentaje / 100);
+        this.myVideo.currentTime = newTime;
+        this.myVideo.play();
+      }
+      if (this.type == "audioPlayer") {
+        let duration = this.myAudio.duration;
+
+        let newTime = duration * (this.valuePercentaje / 100);
+        this.myAudio.currentTime = newTime;
+        this.myAudio.play();
+      }
     },
     initLottie() {
       this.lottieAnimation = lottie.loadAnimation({
@@ -299,12 +321,96 @@ export default {
       }
       // console.log("total Frames: ", this.lottieAnimation.totalFrames);
     },
+
+    initVideoPlayer() {
+      const myVideo = document.querySelector(`video.${this.domElement}`);
+      this.myVideo = myVideo;
+      //console.log("Elemen dom: ", myVideo);
+    },
+
+    controlsVideoPlayer() {
+      //const myVideo = document.querySelector("video.videoExample");
+      if (this.play) {
+        this.myVideo.play();
+        this.play = false;
+      }
+
+      if (this.pause) {
+        this.myVideo.pause();
+        this.pause = false;
+      }
+
+      if (this.forward) {
+        let percentage = this.myVideo.duration * 0.1;
+        let newTime = this.myVideo.currentTime + percentage;
+
+        //console.log("duraion via data: ", (this.myVideo.currentTime = newTime));
+        this.myVideo.currentTime = newTime;
+        this.myVideo.play();
+        this.forward = false;
+      }
+
+      if (this.backward) {
+        let percentage = this.myVideo.duration * 0.1;
+        let newTime =
+          this.myVideo.currentTime - percentage < 0
+            ? 0
+            : this.myVideo.currentTime - percentage;
+
+        this.myVideo.currentTime = newTime;
+        this.myVideo.play();
+        this.backward = false;
+      }
+    },
+
+    initAudioPlayer() {
+      const myAudio = document.querySelector(`audio.${this.domElement}`);
+      this.myAudio = myAudio;
+      //console.log("Elemen dom: ", myAudio);
+    },
+
+    controlsAudioPlayer() {
+      //const myAudio = document.querySelector("video.videoExample");
+      if (this.play) {
+        this.myAudio.play();
+        this.play = false;
+      }
+
+      if (this.pause) {
+        this.myAudio.pause();
+        this.pause = false;
+      }
+
+      if (this.forward) {
+        let percentage = this.myAudio.duration * 0.1;
+        let newTime = this.myAudio.currentTime + percentage;
+
+        //console.log("duraion via data: ", (this.myAudio.currentTime = newTime));
+        this.myAudio.currentTime = newTime;
+        this.myAudio.play();
+        this.forward = false;
+      }
+
+      if (this.backward) {
+        let percentage = this.myAudio.duration * 0.1;
+        let newTime =
+          this.myAudio.currentTime - percentage < 0
+            ? 0
+            : this.myAudio.currentTime - percentage;
+
+        this.myAudio.currentTime = newTime;
+        this.myAudio.play();
+        this.backward = false;
+      }
+    },
   },
   computed() {},
 
   mounted() {
     if (this.type == "AnimationMixer") this.initThreeJs();
     if (this.type == "lottieFiles") this.initLottie();
+    if (this.type == "videoPlayer") this.initVideoPlayer();
+    if (this.type == "audioPlayer") this.initAudioPlayer();
   },
 };
 </script>
