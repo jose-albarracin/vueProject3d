@@ -99,8 +99,6 @@ export default {
   },
   methods: {
     initThreeJs() {
-      //let action = this.timeAction;
-
       const scene = new THREE.Scene();
       let clock = new THREE.Clock();
       const camera = new THREE.PerspectiveCamera(
@@ -122,22 +120,18 @@ export default {
 
       let mixer;
       let duration;
-      //let modelReady = false;
-
-      //console.log("source?: ", this.source);
+      let animation;
 
       const loader = new GLTFLoader();
       loader.load(
         `${this.source}`,
         (gltf) => {
           mixer = new THREE.AnimationMixer(gltf.scene);
-          // console.log("asdas: ", gltf.animations);
-
-          let animation = mixer.clipAction(gltf.animations[0]);
+          animation = mixer.clipAction(gltf.animations[0]);
 
           duration = animation._clip.duration;
           this.duration = duration;
-          //animation.setLoop(THREE.LoopOnce);
+          animation.setLoop(THREE.LoopOnce);
           animation.clampWhenFinished = true;
           animation.timeScale = 1;
           animation.play();
@@ -164,12 +158,9 @@ export default {
       light.castShadow = true;
       scene.add(light2);
 
-      //camera.position.z = 5;
-      //camera.position.y = 1;
       camera.position.set(0, 0.5, 2.5);
       controls.target.set(0, 0, 0);
 
-      //camera.rotation.set(100, 100, 100);
       controls.update();
 
       window.addEventListener("resize", onWindowResize, false);
@@ -182,39 +173,53 @@ export default {
 
       let animate = () => {
         requestAnimationFrame(animate);
-        //console.log("mixer: ", mixer);
-        //Forward 10%
-        // console.log("mixer._actions[0].time fuera: ", mixer._actions[0].time);
-        //isNewTime;
+
         if (this.isNewTime) {
           let percentageValue = this.duration * (this.valuePercentaje / 100);
+          mixer.setTime(percentageValue);
           mixer._actions[0].time = percentageValue;
+          console.log("percentageValue: ", percentageValue);
+          animation.paused = false;
+          mixer.timeScale = 1;
+          console.log("verificacion inicial: ", mixer._actions[0].time);
+
           this.isNewTime = false;
         }
 
         if (this.forward) {
-          let newTime = mixer._actions[0].time * 0.1;
+          let percentage = duration * 0.1;
 
-          mixer._actions[0].time =
-            newTime + mixer._actions[0].time > duration
+          console.log("antes de entrar time Mixer", mixer.time);
+          console.log("antes de entrar time actions", mixer._actions[0].time);
+
+          let newtime =
+            percentage + mixer._actions[0].time > duration
               ? duration
-              : newTime + mixer._actions[0].time;
+              : percentage + mixer._actions[0].time;
 
+          console.log("newtime from forward: ", newtime);
+
+          mixer.setTime(newtime);
+          mixer._actions[0].time = newtime;
+          console.log("verificacion inicial: ", mixer._actions[0].time);
           this.forward = false;
         }
 
         //Backward 10%
         if (this.backward) {
-          let percentage = mixer._actions[0].time * 0.1;
-          let newTime = mixer._actions[0].time - percentage;
+          let percentage = duration * 0.1;
 
+          let newTime =
+            mixer._actions[0].time - percentage < 0
+              ? 0
+              : mixer._actions[0].time - percentage;
+
+          console.log("newtime from backward: ", newTime);
+          mixer.setTime(newTime);
           mixer._actions[0].time = newTime;
-
-          /*  console.log(
-            "Tiempo Suministrado hacia atras: ",
-            mixer._actions[0].time
-          );
-          console.log("percentage: ", percentage); */
+          animation.paused = false;
+          mixer.timeScale = 1;
+          // animation.play();
 
           this.backward = false;
         }
@@ -227,16 +232,25 @@ export default {
 
         //Play animation
         if (this.play) {
+          //animation.stop();
           mixer.timeScale = 1;
           this.play = false;
         }
-        if (Math.round(mixer ? mixer._actions[0].time : 0) == duration) return;
-        if (mixer) {
-          //console.log("mixer: ", Math.round(mixer._actions[0].time));
 
+        //Al cumplir la duracion retorna
+
+        if (mixer) {
+          if (Math.round(mixer.time) >= duration) {
+            // mixer.setTime(duration);
+            mixer._actions[0].time = duration;
+            mixer.timeScale = 0;
+            // console.log("mixer from bucle: ", mixer.time);
+          }
           mixer.update(clock.getDelta());
           //mixer.setTime(0);
+          //console.log("mixer: ", mixer);
         }
+        //console.log("test");
 
         render();
       };
@@ -245,9 +259,8 @@ export default {
         renderer.render(scene, camera);
       }
     },
+
     percentateInput() {
-      // let percentageValue = this.duration * (this.valuePercentaje / 100);
-      //console.log("value:", percentageValue);
       this.isNewTime = true;
 
       if (this.type == "lottieFiles") {
@@ -272,17 +285,15 @@ export default {
         this.myAudio.play();
       }
     },
+
     initLottie() {
       this.lottieAnimation = lottie.loadAnimation({
-        container: document.getElementById(`${this.domElement}`), // the dom element that will contain the animation
+        container: document.getElementById(`${this.domElement}`),
         renderer: "svg",
         loop: false,
         autoplay: true,
-        path: `${this.source}`, // the path to the animation json
+        path: `${this.source}`,
       });
-
-      // this.lottieAnimation.addEventListener("DOMLoaded", onDOMLoaded);
-      console.log("this.lottieAnimation: ", this.lottieAnimation);
     },
 
     controlsLottie() {
@@ -297,7 +308,6 @@ export default {
             : currentFrame - percentageFrame;
         this.lottieAnimation.goToAndPlay(newFrame, true);
         this.backward = false;
-        console.log("por aqui no");
       }
 
       if (this.forward) {
@@ -325,7 +335,6 @@ export default {
     initVideoPlayer() {
       const myVideo = document.querySelector(`video.${this.domElement}`);
       this.myVideo = myVideo;
-      //console.log("Elemen dom: ", myVideo);
     },
 
     controlsVideoPlayer() {
@@ -344,7 +353,6 @@ export default {
         let percentage = this.myVideo.duration * 0.1;
         let newTime = this.myVideo.currentTime + percentage;
 
-        //console.log("duraion via data: ", (this.myVideo.currentTime = newTime));
         this.myVideo.currentTime = newTime;
         this.myVideo.play();
         this.forward = false;
@@ -366,7 +374,6 @@ export default {
     initAudioPlayer() {
       const myAudio = document.querySelector(`audio.${this.domElement}`);
       this.myAudio = myAudio;
-      //console.log("Elemen dom: ", myAudio);
     },
 
     controlsAudioPlayer() {
@@ -385,7 +392,6 @@ export default {
         let percentage = this.myAudio.duration * 0.1;
         let newTime = this.myAudio.currentTime + percentage;
 
-        //console.log("duraion via data: ", (this.myAudio.currentTime = newTime));
         this.myAudio.currentTime = newTime;
         this.myAudio.play();
         this.forward = false;

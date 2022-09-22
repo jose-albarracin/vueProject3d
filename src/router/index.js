@@ -1,14 +1,14 @@
 //import Vue from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 
-import Home from "@/views/Home.vue";
-import ExampleOne from "@/views/exampleOne.vue";
-import ExampleTwo from "@/views/exampleTwo.vue";
-import ExampleThree from "@/views/exampleThree.vue";
-import ExampleFour from "@/views/exampleFour.vue";
-import lottieExample0 from "@/views/lottieExample0.vue";
-import videoPlayerExample from "@/views/videoPlayerExample.vue";
-import audioPlayerExample from "@/views/audioPlayerExample.vue";
+const Home = () => import("@/views/Home.vue");
+const ExampleOne = () => import("@/views/exampleOne.vue");
+const ExampleTwo = () => import("@/views/exampleTwo.vue");
+const ExampleThree = () => import("@/views/exampleThree.vue");
+const ExampleFour = () => import("@/views/exampleFour.vue");
+const lottieExample0 = () => import("@/views/lottieExample0.vue");
+const videoPlayerExample = () => import("@/views/videoPlayerExample.vue");
+const audioPlayerExample = () => import("@/views/audioPlayerExample.vue");
 
 //Vue.use(VueRouter);
 
