@@ -95,84 +95,104 @@ export default {
       lottieAnimation: undefined,
       myVideo: undefined,
       myAudio: undefined,
+      canvas: undefined,
+      render: THREE.WebGLRenderer,
+      instance: undefined,
+      animate: undefined,
+      destroy: true,
     };
   },
   methods: {
     initThreeJs() {
       const scene = new THREE.Scene();
       let clock = new THREE.Clock();
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
-      const canvas = document.getElementById(`${this.domElement}`);
-      const renderer = new THREE.WebGLRenderer({
-        canvas: canvas,
-        antialias: true,
-        alpha: true,
-      });
-      const controls = new OrbitControls(camera, renderer.domElement);
-      //controls.enableDamping = true;
-      controls.screenSpacePanning = true;
-      renderer.setSize(window.innerWidth, window.innerHeight);
-
+      let camera;
       let mixer;
       let duration;
       let animation;
 
-      const loader = new GLTFLoader();
-      loader.load(
-        `${this.source}`,
-        (gltf) => {
-          mixer = new THREE.AnimationMixer(gltf.scene);
-          animation = mixer.clipAction(gltf.animations[0]);
+      let init = () => {
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        this.canvas = document.getElementById(`${this.domElement}`);
 
-          duration = animation._clip.duration;
-          this.duration = duration;
-          animation.setLoop(THREE.LoopOnce);
-          animation.clampWhenFinished = true;
-          animation.timeScale = 1;
-          animation.play();
+        this.render = new THREE.WebGLRenderer({
+          canvas: this.canvas,
+          antialias: true,
+          alpha: true,
+        });
 
-          scene.add(gltf.scene);
-        },
-        // called while loading is progressing
-        function (xhr) {
-          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-        },
-        // called when loading has errors
-        function (error) {
-          console.log("An error happened: ", error);
-        }
-      );
+        //renderer =this.render ;
+        const controls = new OrbitControls(camera, this.render.domElement);
+        //controls.enableDamping = true;
+        controls.screenSpacePanning = true;
+        this.render.setSize(window.innerWidth, window.innerHeight);
 
-      let light = new THREE.DirectionalLight(0xffffff);
-      light.position.set(0, 0, 10);
-      light.castShadow = true;
-      scene.add(light);
+        let loader = new GLTFLoader();
+        loader.load(
+          `${this.source}`,
+          (gltf) => {
+            mixer = new THREE.AnimationMixer(gltf.scene);
+            animation = mixer.clipAction(gltf.animations[0]);
 
-      let light2 = new THREE.DirectionalLight(0xffffff);
-      light2.position.set(0, 0, -10);
-      light.castShadow = true;
-      scene.add(light2);
+            duration = animation._clip.duration;
+            this.duration = duration;
+            animation.setLoop(THREE.LoopOnce);
+            animation.clampWhenFinished = true;
+            animation.timeScale = 1;
+            animation.play();
 
-      camera.position.set(0, 0.5, 2.5);
-      controls.target.set(0, 0, 0);
+            scene.add(gltf.scene);
+          },
+          // called while loading is progressing
+          function (xhr) {
+            console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+          },
+          // called when loading has errors
+          function (error) {
+            console.log("An error happened: ", error);
+          }
+        );
 
-      controls.update();
+        //loader = null;
 
-      window.addEventListener("resize", onWindowResize, false);
-      function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        render();
-      }
+        let light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0, 0, 10);
+        light.castShadow = true;
+        scene.add(light);
 
+        let light2 = new THREE.DirectionalLight(0xffffff);
+        light2.position.set(0, 0, -10);
+        light.castShadow = true;
+        scene.add(light2);
+
+        camera.position.set(0, 0.5, 2.5);
+        controls.target.set(0, 0, 0);
+
+        controls.update();
+
+        let onWindowResize = () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          this.render.setSize(window.innerWidth, window.innerHeight);
+          render();
+        };
+
+        //Event resize
+        window.addEventListener("resize", onWindowResize, false);
+      };
+
+      let render = () => {
+        this.render.render(scene, camera);
+      };
+
+      //Animation
       let animate = () => {
-        requestAnimationFrame(animate);
+        if (this.destroy) requestAnimationFrame(animate);
 
         if (this.isNewTime) {
           let percentageValue = this.duration * (this.valuePercentaje / 100);
@@ -248,16 +268,16 @@ export default {
           }
           mixer.update(clock.getDelta());
           //mixer.setTime(0);
-          //console.log("mixer: ", mixer);
+          //console.log("mixer: ", mixer.time);
         }
-        //console.log("test");
 
+        //console.log("render: ", this.render);
         render();
       };
+
+      init();
+
       animate();
-      function render() {
-        renderer.render(scene, camera);
-      }
     },
 
     percentateInput() {
@@ -413,10 +433,26 @@ export default {
   computed() {},
 
   mounted() {
+    //let moment = new this.initThreeJs();
     if (this.type == "AnimationMixer") this.initThreeJs();
     if (this.type == "lottieFiles") this.initLottie();
     if (this.type == "videoPlayer") this.initVideoPlayer();
     if (this.type == "audioPlayer") this.initAudioPlayer();
+  },
+  beforeUnmount() {
+    if (this.type == "AnimationMixer") {
+      /* console.log(        "DESTRUYENDO: ",        document.getElementById(`${this.domElement}`)      ); */
+      this.canvas.parentElement.remove();
+      this.render.forceContextLoss();
+      this.render.dispose();
+      this.destroy = false;
+      /* console.log(
+        "se ha destruido canvas?: ",
+        document.getElementById(`${this.domElement}`)
+      ); */
+
+      //requestAnimationFrame(null);
+    }
   },
 };
 </script>
