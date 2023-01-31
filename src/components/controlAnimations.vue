@@ -72,6 +72,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import lottie from "lottie-web";
 
+import utils from "../util/MediaPlayer";
+
 export default {
   name: "controlAnimations",
   props: {
@@ -306,7 +308,7 @@ export default {
       }
     },
 
-    initLottie() {
+    /* initLottie() {
       this.lottieAnimation = lottie.loadAnimation({
         container: document.getElementById(`${this.domElement}`),
         renderer: "svg",
@@ -314,7 +316,7 @@ export default {
         autoplay: true,
         path: `${this.source}`,
       });
-    },
+    }, */
 
     controlsLottie() {
       let currentFrame = this.lottieAnimation.currentFrame;
@@ -352,10 +354,10 @@ export default {
       // console.log("total Frames: ", this.lottieAnimation.totalFrames);
     },
 
-    initVideoPlayer() {
+    /*   initVideoPlayer() {
       const myVideo = document.querySelector(`video.${this.domElement}`);
       this.myVideo = myVideo;
-    },
+    }, */
 
     controlsVideoPlayer() {
       //const myVideo = document.querySelector("video.videoExample");
@@ -391,10 +393,10 @@ export default {
       }
     },
 
-    initAudioPlayer() {
+    /*   initAudioPlayer() {
       const myAudio = document.querySelector(`audio.${this.domElement}`);
       this.myAudio = myAudio;
-    },
+    }, */
 
     controlsAudioPlayer() {
       //const myAudio = document.querySelector("video.videoExample");
@@ -434,10 +436,18 @@ export default {
 
   mounted() {
     //let moment = new this.initThreeJs();
-    if (this.type == "AnimationMixer") this.initThreeJs();
-    if (this.type == "lottieFiles") this.initLottie();
-    if (this.type == "videoPlayer") this.initVideoPlayer();
-    if (this.type == "audioPlayer") this.initAudioPlayer();
+    if (this.type == "AnimationMixer") {
+      utils.initThreeJs(this.domElement, this.source);
+    }
+    if (this.type == "lottieFiles") {
+      this.lottieAnimation = utils.initLottie(this.domElement, this.source);
+    }
+    if (this.type == "videoPlayer") {
+      this.myVideo = utils.initVideoPlayer(this.domElement);
+    }
+    if (this.type == "audioPlayer") {
+      this.myAudio = utils.initAudioPlayer(this.domElement);
+    }
   },
   beforeUnmount() {
     if (this.type == "AnimationMixer") {
