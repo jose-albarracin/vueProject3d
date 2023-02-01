@@ -57,7 +57,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import lottie from "lottie-web";
 
 import utils from "../util/MediaPlayer";
 
@@ -114,6 +113,28 @@ export default {
           controlAction,
           this.valuePercentaje
         );
+      }
+
+      if (type == "AnimationMixer") {
+        let controlsThreeJS = {
+          play: () => {
+            this.play = true;
+          },
+          pause: () => {
+            this.pause = true;
+          },
+          backward: () => {
+            this.backward = true;
+          },
+          forward: () => {
+            this.forward = true;
+          },
+          percentaje: () => {
+            this.isNewTime = true;
+          },
+        };
+
+        return controlsThreeJS[`${controlAction}`]();
       }
     },
 
@@ -449,7 +470,7 @@ export default {
   mounted() {
     //let moment = new this.initThreeJs();
     if (this.type == "AnimationMixer") {
-      utils.initThreeJs(this.domElement, this.source);
+      this.initThreeJs();
     }
     if (this.type == "lottieFiles") {
       this.lottieAnimation = utils.initLottie(this.domElement, this.source);
