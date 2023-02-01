@@ -145,10 +145,54 @@ function initThreeJs(
 
   animate();
 }
+//CONTROLS
+
+function controlsLottie(lottie, control, valuePercentaje) {
+  let currentFrame = lottie.currentFrame;
+  let totalFrames = lottie.totalFrames;
+
+  if (control == "play") {
+    lottie.play();
+    return;
+  }
+
+  if (control == "pause") {
+    lottie.pause();
+    return;
+  }
+
+  if (control == "backward") {
+    let percentageFrame = totalFrames * 0.1;
+    let newFrame =
+      currentFrame - percentageFrame < 0 ? 0 : currentFrame - percentageFrame;
+    lottie.goToAndPlay(newFrame, true);
+    return;
+  }
+
+  if (control == "forward") {
+    let percentageFrame = totalFrames * 0.1;
+    let newFrame =
+      currentFrame + percentageFrame > totalFrames
+        ? totalFrames
+        : currentFrame + percentageFrame;
+    lottie.goToAndPlay(newFrame, true);
+    return;
+  }
+
+  if (control == "percentaje") {
+    let totalFrames = lottie.totalFrames;
+
+    let newFrame = totalFrames * (valuePercentaje / 100);
+    lottie.goToAndPlay(newFrame, true);
+    return;
+  }
+}
 
 export default {
   initLottie,
   initVideoPlayer,
   initAudioPlayer,
   initThreeJs,
+
+  controlsLottie,
 };

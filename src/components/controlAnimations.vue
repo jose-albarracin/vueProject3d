@@ -6,11 +6,7 @@
     <button
       @click="
         () => {
-          backward = true;
-
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'backward');
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -20,10 +16,7 @@
     <button
       @click="
         () => {
-          forward = true;
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'forward');
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -34,10 +27,7 @@
     <button
       @click="
         () => {
-          pause = true;
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'pause');
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -47,10 +37,7 @@
     <button
       @click="
         () => {
-          play = true;
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'play');
         }
       "
       class="bg-blue-400 h-fit text-white hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -61,7 +48,7 @@
       class="p-3 border border-blue-400 h-8"
       type="number"
       v-model="valuePercentaje"
-      @keyup.enter="percentateInput"
+      @keyup.enter="controls(type, 'percentaje')"
     />
   </div>
 </template>
@@ -105,6 +92,16 @@ export default {
     };
   },
   methods: {
+    controls(type, controlAction) {
+      if (type == "lottieFiles") {
+        return utils.controlsLottie(
+          this.lottieAnimation,
+          controlAction,
+          this.valuePercentaje
+        );
+      }
+    },
+
     initThreeJs() {
       const scene = new THREE.Scene();
       let clock = new THREE.Clock();
@@ -318,7 +315,7 @@ export default {
       });
     }, */
 
-    controlsLottie() {
+    /*   controlsLottie() {
       let currentFrame = this.lottieAnimation.currentFrame;
       let totalFrames = this.lottieAnimation.totalFrames;
 
@@ -352,7 +349,7 @@ export default {
         this.pause = false;
       }
       // console.log("total Frames: ", this.lottieAnimation.totalFrames);
-    },
+    }, */
 
     /*   initVideoPlayer() {
       const myVideo = document.querySelector(`video.${this.domElement}`);
