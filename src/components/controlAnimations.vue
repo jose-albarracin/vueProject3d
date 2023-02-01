@@ -108,6 +108,13 @@ export default {
           this.valuePercentaje
         );
       }
+      if (type == "audioPlayer") {
+        return utils.controlsAudioPlayer(
+          this.myAudio,
+          controlAction,
+          this.valuePercentaje
+        );
+      }
     },
 
     initThreeJs() {

@@ -145,6 +145,7 @@ function initThreeJs(
 
   animate();
 }
+
 //CONTROLS
 
 function controlsLottie(lottie, control, valuePercentaje) {
@@ -231,6 +232,47 @@ function controlsVideoPlayer(videoPlayer, control, valuePercentaje) {
   }
 }
 
+function controlsAudioPlayer(audioPlayer, control, valuePercentaje) {
+  if (control == "play") {
+    audioPlayer.play();
+    return;
+  }
+
+  if (control == "pause") {
+    audioPlayer.pause();
+    return;
+  }
+
+  if (control == "forward") {
+    let percentage = audioPlayer.duration * 0.1;
+    let newTime = audioPlayer.currentTime + percentage;
+
+    audioPlayer.currentTime = newTime;
+    audioPlayer.play();
+    return;
+  }
+
+  if (control == "backward") {
+    let percentage = audioPlayer.duration * 0.1;
+    let newTime =
+      audioPlayer.currentTime - percentage < 0
+        ? 0
+        : audioPlayer.currentTime - percentage;
+
+    audioPlayer.currentTime = newTime;
+    audioPlayer.play();
+    return;
+  }
+  if (control == "percentaje") {
+    let duration = audioPlayer.duration;
+
+    let newTime = duration * (valuePercentaje / 100);
+    audioPlayer.currentTime = newTime;
+    audioPlayer.play();
+    return;
+  }
+}
+
 export default {
   initLottie,
   initVideoPlayer,
@@ -239,4 +281,5 @@ export default {
 
   controlsLottie,
   controlsVideoPlayer,
+  controlsAudioPlayer,
 };
