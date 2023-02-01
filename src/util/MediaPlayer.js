@@ -188,6 +188,49 @@ function controlsLottie(lottie, control, valuePercentaje) {
   }
 }
 
+function controlsVideoPlayer(videoPlayer, control, valuePercentaje) {
+  //const myVideo = document.querySelector("video.videoExample");
+  if (control == "play") {
+    videoPlayer.play();
+    return;
+  }
+
+  if (control == "pause") {
+    videoPlayer.pause();
+    return;
+  }
+
+  if (control == "forward") {
+    let percentage = videoPlayer.duration * 0.1;
+    let newTime = videoPlayer.currentTime + percentage;
+
+    videoPlayer.currentTime = newTime;
+    videoPlayer.play();
+    return;
+  }
+
+  if (control == "backward") {
+    let percentage = videoPlayer.duration * 0.1;
+    let newTime =
+      videoPlayer.currentTime - percentage < 0
+        ? 0
+        : videoPlayer.currentTime - percentage;
+
+    videoPlayer.currentTime = newTime;
+    videoPlayer.play();
+    return;
+  }
+
+  if (control == "percentaje") {
+    let duration = videoPlayer.duration;
+
+    let newTime = duration * (valuePercentaje / 100);
+    videoPlayer.currentTime = newTime;
+    videoPlayer.play();
+    return;
+  }
+}
+
 export default {
   initLottie,
   initVideoPlayer,
@@ -195,4 +238,5 @@ export default {
   initThreeJs,
 
   controlsLottie,
+  controlsVideoPlayer,
 };

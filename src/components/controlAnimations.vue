@@ -100,6 +100,14 @@ export default {
           this.valuePercentaje
         );
       }
+
+      if (type == "videoPlayer") {
+        return utils.controlsVideoPlayer(
+          this.myVideo,
+          controlAction,
+          this.valuePercentaje
+        );
+      }
     },
 
     initThreeJs() {
@@ -356,7 +364,7 @@ export default {
       this.myVideo = myVideo;
     }, */
 
-    controlsVideoPlayer() {
+    /*   controlsVideoPlayer() {
       //const myVideo = document.querySelector("video.videoExample");
       if (this.play) {
         this.myVideo.play();
@@ -388,7 +396,7 @@ export default {
         this.myVideo.play();
         this.backward = false;
       }
-    },
+    }, */
 
     /*   initAudioPlayer() {
       const myAudio = document.querySelector(`audio.${this.domElement}`);
