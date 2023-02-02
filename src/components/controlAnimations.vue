@@ -6,11 +6,7 @@
     <button
       @click="
         () => {
-          backward = true;
-
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'backward');
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -20,10 +16,7 @@
     <button
       @click="
         () => {
-          forward = true;
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'forward');
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -34,10 +27,7 @@
     <button
       @click="
         () => {
-          pause = true;
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'pause');
         }
       "
       class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -47,10 +37,7 @@
     <button
       @click="
         () => {
-          play = true;
-          type == 'lottieFiles' && controlsLottie();
-          type == 'videoPlayer' && controlsVideoPlayer();
-          type == 'audioPlayer' && controlsAudioPlayer();
+          controls(type, 'play');
         }
       "
       class="bg-blue-400 h-fit text-white hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
@@ -61,7 +48,7 @@
       class="p-3 border border-blue-400 h-8"
       type="number"
       v-model="valuePercentaje"
-      @keyup.enter="percentateInput"
+      @keyup.enter="controls(type, 'percentaje')"
     />
   </div>
 </template>
@@ -70,7 +57,8 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import lottie from "lottie-web";
+
+import utils from "../util/MediaPlayer";
 
 export default {
   name: "controlAnimations",
@@ -78,13 +66,10 @@ export default {
     classes: String,
     type: String,
     source: String,
-    scene: undefined,
     domElement: String,
   },
   data() {
     return {
-      time: undefined,
-      timeAction: false,
       forward: false,
       backward: false,
       play: false,
@@ -97,12 +82,58 @@ export default {
       myAudio: undefined,
       canvas: undefined,
       render: THREE.WebGLRenderer,
-      instance: undefined,
       animate: undefined,
       destroy: true,
     };
   },
   methods: {
+    controls(type, controlAction) {
+      if (type == "lottieFiles") {
+        return utils.controlsLottie(
+          this.lottieAnimation,
+          controlAction,
+          this.valuePercentaje
+        );
+      }
+
+      if (type == "videoPlayer") {
+        return utils.controlsVideoPlayer(
+          this.myVideo,
+          controlAction,
+          this.valuePercentaje
+        );
+      }
+      if (type == "audioPlayer") {
+        return utils.controlsAudioPlayer(
+          this.myAudio,
+          controlAction,
+          this.valuePercentaje
+        );
+      }
+
+      if (type == "AnimationMixer") {
+        let controlsThreeJS = {
+          play: () => {
+            this.play = true;
+          },
+          pause: () => {
+            this.pause = true;
+          },
+          backward: () => {
+            this.backward = true;
+          },
+          forward: () => {
+            this.forward = true;
+          },
+          percentaje: () => {
+            this.isNewTime = true;
+          },
+        };
+
+        return controlsThreeJS[`${controlAction}`]();
+      }
+    },
+
     initThreeJs() {
       const scene = new THREE.Scene();
       let clock = new THREE.Clock();
@@ -126,7 +157,6 @@ export default {
           alpha: true,
         });
 
-        //renderer =this.render ;
         const controls = new OrbitControls(camera, this.render.domElement);
         //controls.enableDamping = true;
         controls.screenSpacePanning = true;
@@ -167,7 +197,7 @@ export default {
 
         let light2 = new THREE.DirectionalLight(0xffffff);
         light2.position.set(0, 0, -10);
-        light.castShadow = true;
+        light2.castShadow = true;
         scene.add(light2);
 
         camera.position.set(0, 0.5, 2.5);
@@ -198,10 +228,9 @@ export default {
           let percentageValue = this.duration * (this.valuePercentaje / 100);
           mixer.setTime(percentageValue);
           mixer._actions[0].time = percentageValue;
-          console.log("percentageValue: ", percentageValue);
+
           animation.paused = false;
           mixer.timeScale = 1;
-          console.log("verificacion inicial: ", mixer._actions[0].time);
 
           this.isNewTime = false;
         }
@@ -209,19 +238,14 @@ export default {
         if (this.forward) {
           let percentage = duration * 0.1;
 
-          console.log("antes de entrar time Mixer", mixer.time);
-          console.log("antes de entrar time actions", mixer._actions[0].time);
-
           let newtime =
             percentage + mixer._actions[0].time > duration
               ? duration
               : percentage + mixer._actions[0].time;
 
-          console.log("newtime from forward: ", newtime);
-
           mixer.setTime(newtime);
           mixer._actions[0].time = newtime;
-          console.log("verificacion inicial: ", mixer._actions[0].time);
+
           this.forward = false;
         }
 
@@ -234,12 +258,10 @@ export default {
               ? 0
               : mixer._actions[0].time - percentage;
 
-          console.log("newtime from backward: ", newTime);
           mixer.setTime(newTime);
           mixer._actions[0].time = newTime;
           animation.paused = false;
           mixer.timeScale = 1;
-          // animation.play();
 
           this.backward = false;
         }
@@ -252,26 +274,18 @@ export default {
 
         //Play animation
         if (this.play) {
-          //animation.stop();
           mixer.timeScale = 1;
           this.play = false;
         }
 
-        //Al cumplir la duracion retorna
-
+        //Mixer de animacion
         if (mixer) {
           if (Math.round(mixer.time) >= duration) {
-            // mixer.setTime(duration);
             mixer._actions[0].time = duration;
             mixer.timeScale = 0;
-            // console.log("mixer from bucle: ", mixer.time);
           }
           mixer.update(clock.getDelta());
-          //mixer.setTime(0);
-          //console.log("mixer: ", mixer.time);
         }
-
-        //console.log("render: ", this.render);
         render();
       };
 
@@ -279,179 +293,29 @@ export default {
 
       animate();
     },
-
-    percentateInput() {
-      this.isNewTime = true;
-
-      if (this.type == "lottieFiles") {
-        let totalFrames = this.lottieAnimation.totalFrames;
-
-        let newFrame = totalFrames * (this.valuePercentaje / 100);
-        this.lottieAnimation.goToAndPlay(newFrame, true);
-      }
-
-      if (this.type == "videoPlayer") {
-        let duration = this.myVideo.duration;
-
-        let newTime = duration * (this.valuePercentaje / 100);
-        this.myVideo.currentTime = newTime;
-        this.myVideo.play();
-      }
-      if (this.type == "audioPlayer") {
-        let duration = this.myAudio.duration;
-
-        let newTime = duration * (this.valuePercentaje / 100);
-        this.myAudio.currentTime = newTime;
-        this.myAudio.play();
-      }
-    },
-
-    initLottie() {
-      this.lottieAnimation = lottie.loadAnimation({
-        container: document.getElementById(`${this.domElement}`),
-        renderer: "svg",
-        loop: false,
-        autoplay: true,
-        path: `${this.source}`,
-      });
-    },
-
-    controlsLottie() {
-      let currentFrame = this.lottieAnimation.currentFrame;
-      let totalFrames = this.lottieAnimation.totalFrames;
-
-      if (this.backward) {
-        let percentageFrame = totalFrames * 0.1;
-        let newFrame =
-          currentFrame - percentageFrame < 0
-            ? 0
-            : currentFrame - percentageFrame;
-        this.lottieAnimation.goToAndPlay(newFrame, true);
-        this.backward = false;
-      }
-
-      if (this.forward) {
-        let percentageFrame = totalFrames * 0.1;
-        let newFrame =
-          currentFrame + percentageFrame > totalFrames
-            ? totalFrames
-            : currentFrame + percentageFrame;
-        this.lottieAnimation.goToAndPlay(newFrame, true);
-        this.forward = false;
-      }
-
-      if (this.play) {
-        this.lottieAnimation.play();
-        this.play = false;
-      }
-
-      if (this.pause) {
-        this.lottieAnimation.pause();
-        this.pause = false;
-      }
-      // console.log("total Frames: ", this.lottieAnimation.totalFrames);
-    },
-
-    initVideoPlayer() {
-      const myVideo = document.querySelector(`video.${this.domElement}`);
-      this.myVideo = myVideo;
-    },
-
-    controlsVideoPlayer() {
-      //const myVideo = document.querySelector("video.videoExample");
-      if (this.play) {
-        this.myVideo.play();
-        this.play = false;
-      }
-
-      if (this.pause) {
-        this.myVideo.pause();
-        this.pause = false;
-      }
-
-      if (this.forward) {
-        let percentage = this.myVideo.duration * 0.1;
-        let newTime = this.myVideo.currentTime + percentage;
-
-        this.myVideo.currentTime = newTime;
-        this.myVideo.play();
-        this.forward = false;
-      }
-
-      if (this.backward) {
-        let percentage = this.myVideo.duration * 0.1;
-        let newTime =
-          this.myVideo.currentTime - percentage < 0
-            ? 0
-            : this.myVideo.currentTime - percentage;
-
-        this.myVideo.currentTime = newTime;
-        this.myVideo.play();
-        this.backward = false;
-      }
-    },
-
-    initAudioPlayer() {
-      const myAudio = document.querySelector(`audio.${this.domElement}`);
-      this.myAudio = myAudio;
-    },
-
-    controlsAudioPlayer() {
-      //const myAudio = document.querySelector("video.videoExample");
-      if (this.play) {
-        this.myAudio.play();
-        this.play = false;
-      }
-
-      if (this.pause) {
-        this.myAudio.pause();
-        this.pause = false;
-      }
-
-      if (this.forward) {
-        let percentage = this.myAudio.duration * 0.1;
-        let newTime = this.myAudio.currentTime + percentage;
-
-        this.myAudio.currentTime = newTime;
-        this.myAudio.play();
-        this.forward = false;
-      }
-
-      if (this.backward) {
-        let percentage = this.myAudio.duration * 0.1;
-        let newTime =
-          this.myAudio.currentTime - percentage < 0
-            ? 0
-            : this.myAudio.currentTime - percentage;
-
-        this.myAudio.currentTime = newTime;
-        this.myAudio.play();
-        this.backward = false;
-      }
-    },
   },
   computed() {},
 
   mounted() {
-    //let moment = new this.initThreeJs();
-    if (this.type == "AnimationMixer") this.initThreeJs();
-    if (this.type == "lottieFiles") this.initLottie();
-    if (this.type == "videoPlayer") this.initVideoPlayer();
-    if (this.type == "audioPlayer") this.initAudioPlayer();
+    if (this.type == "AnimationMixer") {
+      this.initThreeJs();
+    }
+    if (this.type == "lottieFiles") {
+      this.lottieAnimation = utils.initLottie(this.domElement, this.source);
+    }
+    if (this.type == "videoPlayer") {
+      this.myVideo = utils.initVideoPlayer(this.domElement);
+    }
+    if (this.type == "audioPlayer") {
+      this.myAudio = utils.initAudioPlayer(this.domElement);
+    }
   },
   beforeUnmount() {
     if (this.type == "AnimationMixer") {
-      /* console.log(        "DESTRUYENDO: ",        document.getElementById(`${this.domElement}`)      ); */
       this.canvas.parentElement.remove();
       this.render.forceContextLoss();
       this.render.dispose();
       this.destroy = false;
-      /* console.log(
-        "se ha destruido canvas?: ",
-        document.getElementById(`${this.domElement}`)
-      ); */
-
-      //requestAnimationFrame(null);
     }
   },
 };
