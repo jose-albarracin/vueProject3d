@@ -55,7 +55,7 @@ export default {
       loader.load(
         "models/stylized_cap/scene.gltf",
         function (gltf) {
-          gltf.castShadow = true;
+          //gltf.castShadow = true;
           scene.add(gltf.scene);
 
           gltf.animations; // Array<THREE.AnimationClip>
