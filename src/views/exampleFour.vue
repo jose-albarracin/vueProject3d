@@ -10,11 +10,12 @@
     <div class="container mx-auto max-w-6xl px-3">
       <div class="flex justify-center">
         <ControlAnimations
-          classes="w-1/2 border border-red-500 bg-blue-900"
+          classes="w-full border border-red-500 bg-blue-900"
           source="models/buster_drone/scene.gltf"
           domElement="myCanvas"
           type="AnimationMixer"
           :config="{
+            mode: 'animation',
             aspectRatio: 'panoramic',
           }"
         ></ControlAnimations>

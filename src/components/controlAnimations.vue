@@ -193,21 +193,30 @@ export default {
         controls.screenSpacePanning = true;
         this.render.setSize(this.widthThreeJS, this.heightThreeJS);
 
+        const { mode } = this.config;
+
         let loader = new GLTFLoader();
         loader.load(
           `${this.source}`,
           (gltf) => {
-            mixer = new THREE.AnimationMixer(gltf.scene);
-            animation = mixer.clipAction(gltf.animations[0]);
+            if (mode == "static") {
+              scene.add(gltf.scene);
+              gltf.animations;
+              gltf.scenes;
+              gltf.cameras;
+              gltf.asset;
+            } else {
+              mixer = new THREE.AnimationMixer(gltf.scene);
+              animation = mixer.clipAction(gltf.animations[0]);
+              duration = animation._clip.duration;
+              this.duration = duration;
+              animation.setLoop(THREE.LoopOnce);
+              animation.clampWhenFinished = true;
+              animation.timeScale = 1;
+              animation.play();
 
-            duration = animation._clip.duration;
-            this.duration = duration;
-            animation.setLoop(THREE.LoopOnce);
-            animation.clampWhenFinished = true;
-            animation.timeScale = 1;
-            animation.play();
-
-            scene.add(gltf.scene);
+              scene.add(gltf.scene);
+            }
           },
           // called while loading is progressing
           function (xhr) {
@@ -243,7 +252,10 @@ export default {
 
       //Animation
       let animate = () => {
+        const { mode } = this.config;
         if (this.destroy) requestAnimationFrame(animate);
+
+        if (mode == "static") return render();
 
         if (this.isNewTime) {
           let percentageValue = this.duration * (this.valuePercentaje / 100);
