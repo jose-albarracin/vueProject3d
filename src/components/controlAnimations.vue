@@ -1,55 +1,69 @@
 <template>
-  <div
-    class="py-2 flex gap-4 w-full justify-center items-center"
-    :class="classes"
-  >
-    <button
-      @click="
-        () => {
-          controls(type, 'backward');
-        }
+  <div class="relative" :class="classes">
+    <div
+      id="parentThreeJS"
+      class="w-full"
+      :class="
+        config.aspectRatio == 'panoramic' ? 'aspect-video' : 'aspect-[4/3]'
       "
-      class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
     >
-      backward
-    </button>
-    <button
-      @click="
-        () => {
-          controls(type, 'forward');
-        }
-      "
-      class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
-    >
-      forward
-    </button>
+      <canvas class="" :id="domElement"></canvas>
+    </div>
 
-    <button
-      @click="
-        () => {
-          controls(type, 'pause');
-        }
-      "
-      class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+    <div
+      class="py-2 hidden md:flex gap-4 w-full justify-center items-center absolute top-[100%] left-1/2 -translate-x-1/2 -translate-y-[100%] bg-black/80"
     >
-      Pause
-    </button>
-    <button
-      @click="
-        () => {
-          controls(type, 'play');
-        }
-      "
-      class="bg-blue-400 h-fit text-white hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
-    >
-      Play
-    </button>
-    <input
-      class="p-3 border border-blue-400 h-8"
-      type="number"
-      v-model="valuePercentaje"
-      @keyup.enter="controls(type, 'percentaje')"
-    />
+      <button
+        @click="
+          () => {
+            controls(type, 'backward');
+          }
+        "
+        class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+      >
+        backward
+      </button>
+
+      <button
+        @click="
+          () => {
+            controls(type, 'forward');
+          }
+        "
+        class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+      >
+        forward
+      </button>
+
+      <button
+        @click="
+          () => {
+            controls(type, 'pause');
+          }
+        "
+        class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+      >
+        Pause
+      </button>
+
+      <button
+        @click="
+          () => {
+            controls(type, 'play');
+          }
+        "
+        class="bg-blue-400 h-fit text-white hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+      >
+        Play
+      </button>
+
+      <input
+        class="p-3 border border-blue-400 h-8"
+        type="number"
+        v-model="valuePercentaje"
+        @keyup.enter="controls(type, 'percentaje')"
+      />
+    </div>
   </div>
 </template>
 
@@ -67,6 +81,9 @@ export default {
     type: String,
     source: String,
     domElement: String,
+    width: Number,
+    height: Number,
+    config: Object,
   },
   data() {
     return {
@@ -84,6 +101,8 @@ export default {
       render: THREE.WebGLRenderer,
       animate: undefined,
       destroy: true,
+      widthThreeJS: 1270,
+      heightThreeJS: 720,
     };
   },
   methods: {
@@ -141,15 +160,27 @@ export default {
       let mixer;
       let duration;
       let animation;
+      this.canvas = document.getElementById(`${this.domElement}`);
+      let dataParent = document.getElementById(`parentThreeJS`);
+      this.widthThreeJS = dataParent.clientWidth;
+      this.heightThreeJS = dataParent.clientHeight;
+
+      let resizeObserver = new ResizeObserver(() => {
+        this.widthThreeJS = dataParent.clientWidth;
+        this.heightThreeJS = this.widthThreeJS / this.aspectRatioToggle();
+        this.render.setSize(this.widthThreeJS, this.heightThreeJS);
+        render();
+      });
+
+      resizeObserver.observe(dataParent);
 
       let init = () => {
         camera = new THREE.PerspectiveCamera(
           75,
-          window.innerWidth / window.innerHeight,
+          this.aspectRatioToggle(),
           0.1,
           1000
         );
-        this.canvas = document.getElementById(`${this.domElement}`);
 
         this.render = new THREE.WebGLRenderer({
           canvas: this.canvas,
@@ -160,7 +191,7 @@ export default {
         const controls = new OrbitControls(camera, this.render.domElement);
         //controls.enableDamping = true;
         controls.screenSpacePanning = true;
-        this.render.setSize(window.innerWidth, window.innerHeight);
+        this.render.setSize(this.widthThreeJS, this.heightThreeJS);
 
         let loader = new GLTFLoader();
         loader.load(
@@ -204,16 +235,6 @@ export default {
         controls.target.set(0, 0, 0);
 
         controls.update();
-
-        let onWindowResize = () => {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          this.render.setSize(window.innerWidth, window.innerHeight);
-          render();
-        };
-
-        //Event resize
-        window.addEventListener("resize", onWindowResize, false);
       };
 
       let render = () => {
@@ -286,12 +307,22 @@ export default {
           }
           mixer.update(clock.getDelta());
         }
+
         render();
       };
 
       init();
 
       animate();
+    },
+
+    aspectRatioToggle() {
+      const { aspectRatio } = this.config;
+      if (aspectRatio == "panoramic") {
+        return 16 / 9;
+      } else {
+        return 4 / 3;
+      }
     },
   },
   computed() {},
