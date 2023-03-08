@@ -7,7 +7,7 @@
         Home
       </button>
     </router-link>
-    <div class="container mx-auto max-w-6xl px-3">
+    <div class="container mx-auto max-w-6xl px-3 my-9">
       <div class="flex justify-center">
         <ControlAnimations
           classes="w-full border border-red-500 bg-blue-900"

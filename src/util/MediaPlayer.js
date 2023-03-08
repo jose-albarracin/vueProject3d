@@ -11,7 +11,16 @@ function initLottie(element, source) {
 }
 
 function initVideoPlayer(element) {
-  return document.querySelector(`video.${element}`);
+  return {
+    video: document.querySelector(`#${element} .custom-video-player-video`),
+    videoWrapper: document.querySelector(`#${element}.custom-video`),
+    controlVolume: document.querySelector(
+      `#${element} .custom-video-player-slider[name="volume"]`
+    ),
+    progressBar: document.querySelector(
+      `#${element} .custom-video-progress-filled`
+    ),
+  };
 }
 
 function initAudioPlayer(element) {

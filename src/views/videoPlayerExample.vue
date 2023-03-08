@@ -7,27 +7,36 @@
         Home
       </button>
     </router-link>
-    <div class="flex justify-center">
-      <video
-        id="videoExample"
-        class="videoExample"
-        src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-      ></video>
-    </div>
-    <controlAnimations
+    <div class="flex justify-center"></div>
+    <ControlAnimations
+      classes="w-full "
+      source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      domElement="video1"
       type="videoPlayer"
-      domElement="videoExample"
-    ></controlAnimations>
+      :config="{
+        controls: {
+          play: true,
+          volumen: true,
+          backward: true,
+          forward: true,
+          fullscreen: true,
+          playbackRate: true,
+          progressBar: true,
+          time: true,
+        },
+        loop: true,
+      }"
+    ></ControlAnimations>
   </div>
 </template>
 
 <script>
-import controlAnimations from "@/components/controlAnimations.vue";
+import ControlAnimations from "@/components/controlAnimations.vue";
 export default {
   name: "videoPlayerExample",
   props: {},
   components: {
-    controlAnimations,
+    ControlAnimations,
   },
   data() {
     return {};
