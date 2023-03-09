@@ -5,6 +5,21 @@
     :id="domElement"
     v-on:pointerleave="ePointerleave"
     v-on:pointermove="ePointermove"
+    :style="{
+      backgroundImage:
+        'url(' +
+        `${
+          type == 'audioPlayer'
+            ? config.backgroundImage
+              ? config.backgroundImage
+              : 'images/audioBGdefault.jpg'
+            : ''
+        }` +
+        ')',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center',
+      backgroundSize: 'cover',
+    }"
   >
     <div
       v-if="type == 'AnimationMixer'"
@@ -27,13 +42,14 @@
       :autoplay="config.autoplay"
       :muted="MediaPlayer[`${domElement}_klausPlayer`]?.StatusAudio"
     ></video>
-    <audio
-      v-if="type == 'audioPlayer'"
-      :id="domElement"
-      class="w-full custom-video-player-video"
-      :src="source"
-      controls
-    ></audio>
+    <div class="w-full h-full" v-on:click="controls(type, 'play')">
+      <audio
+        v-if="type == 'audioPlayer'"
+        :id="domElement"
+        class="w-full custom-video-player-video"
+        :src="source"
+      ></audio>
+    </div>
 
     <div class="custom-video-player-controls">
       <div
@@ -332,6 +348,7 @@ export default {
       lottieAnimation: undefined,
       myVideo: undefined,
       myAudio: undefined,
+      myMedia: undefined,
       canvas: undefined,
       render: THREE.WebGLRenderer,
       animate: undefined,
@@ -351,19 +368,12 @@ export default {
         );
       }
 
-      if (type == "videoPlayer") {
-        return utils.controlsVideoPlayer(
-          this.myVideo,
+      if (type == "videoPlayer" || type == "audioPlayer") {
+        return utils.controlsVideAndAudioPlayer(
+          this.myMedia,
           controlAction,
           this.domElement,
           params
-        );
-      }
-      if (type == "audioPlayer") {
-        return utils.controlsAudioPlayer(
-          this.myAudio,
-          controlAction,
-          this.valuePercentaje
         );
       }
 
@@ -397,7 +407,7 @@ export default {
       let mixer;
       let duration;
       let animation;
-      this.canvas = document.getElementById(`${this.domElement}`);
+      this.canvas = document.querySelector(`canvas#${this.domElement}`);
       let dataParent = document.getElementById(`parentThreeJS`);
       this.widthThreeJS = dataParent.clientWidth;
       this.heightThreeJS = dataParent.clientHeight;
@@ -419,6 +429,7 @@ export default {
           1000
         );
 
+        console.log("this.canvas", this.canvas);
         this.render = new THREE.WebGLRenderer({
           canvas: this.canvas,
           antialias: true,
@@ -616,12 +627,12 @@ export default {
     }
     //Video
     if (this.type == "videoPlayer") {
-      this.myVideo = utils.initVideoPlayer(this.domElement, this.config);
+      this.myMedia = utils.initVideoPlayer(this.domElement, this.config);
     }
 
     //Audio
     if (this.type == "audioPlayer") {
-      this.myAudio = utils.initAudioPlayer(this.domElement);
+      this.myMedia = utils.initAudioPlayer(this.domElement, this.config);
     }
   },
   beforeUnmount() {
@@ -631,7 +642,7 @@ export default {
       this.render.dispose();
       this.destroy = false;
     }
-    if (this.type == "videoPlayer") {
+    if (this.type == "videoPlayer" || this.type == "audioPlayer") {
       clearInterval(
         this.MediaPlayer[`${this.domElement}_klausPlayer`].progression
       );

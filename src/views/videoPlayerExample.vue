@@ -10,7 +10,7 @@
     <div class="container max-w-6xl mx-auto">
       <div class="flex justify-center">
         <ControlAnimations
-          classes="w-1/2"
+          classes="w-1/2 "
           source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
           domElement="video1"
           type="videoPlayer"

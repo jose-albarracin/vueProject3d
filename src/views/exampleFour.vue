@@ -10,6 +10,29 @@
     <div class="container mx-auto max-w-6xl px-3 my-9">
       <div class="flex justify-center">
         <ControlAnimations
+          classes="w-1/2 "
+          source="models/buster_drone/scene.gltf"
+          domElement="threejs1"
+          type="AnimationMixer"
+          :config="{
+            mode: 'animation',
+            aspectRatio: 'panoramic',
+            controls: {
+              play: true,
+              volumen: true,
+              backward: true,
+              forward: true,
+              fullscreen: true,
+              playbackRate: true,
+              progressBar: true,
+              time: true,
+            },
+            loop: true,
+            autoplay: false,
+            muted: false,
+          }"
+        ></ControlAnimations>
+        <!--  <ControlAnimations
           classes="w-full border border-red-500 bg-blue-900"
           source="models/buster_drone/scene.gltf"
           domElement="myCanvas"
@@ -18,7 +41,7 @@
             mode: 'animation',
             aspectRatio: 'panoramic',
           }"
-        ></ControlAnimations>
+        ></ControlAnimations> -->
       </div>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vel diam

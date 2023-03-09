@@ -30,8 +30,8 @@ function initVideoPlayer(element, config) {
   let { MediaPlayer } = getters;
 
   let obj = {
-    video: document.querySelector(`#${element} .custom-video-player-video`),
-    videoWrapper: document.querySelector(`#${element}.custom-video`),
+    media: document.querySelector(`#${element} .custom-video-player-video`),
+    mediaWrapper: document.querySelector(`#${element}.custom-video`),
     controlVolume: document.querySelector(
       `#${element} .custom-video-player-slider[name="volume"]`
     ),
@@ -57,7 +57,7 @@ function initVideoPlayer(element, config) {
   }
 
   if (config.autoplay) {
-    controlsVideoPlayer(obj, "play", element);
+    controlsVideAndAudioPlayer(obj, "play", element);
   }
 
   dispatch("UPDATE_state", {
@@ -77,8 +77,56 @@ function initVideoPlayer(element, config) {
   return obj;
 }
 
-function initAudioPlayer(element) {
-  return document.querySelector(`audio.${element}`);
+function initAudioPlayer(element, config) {
+  let { dispatch, getters } = store;
+  let { MediaPlayer } = getters;
+
+  let obj = {
+    media: document.querySelector(`#${element} .custom-video-player-video`),
+    mediaWrapper: document.querySelector(`#${element}.custom-video`),
+    controlVolume: document.querySelector(
+      `#${element} .custom-video-player-slider[name="volume"]`
+    ),
+    progressBar: document.querySelector(
+      `#${element} .custom-video-progress-filled`
+    ),
+  };
+
+  dispatch("UPDATE_state", {
+    key: [`${element}_klausPlayer`],
+    val: { ...obj, ...init },
+  });
+
+  dispatch("UPDATE_state", {
+    parent: `${element}_klausPlayer`,
+    key: "StatusAudio",
+    val: config.muted,
+  });
+
+  if (MediaPlayer[`${element}_klausPlayer`].StatusAudio) {
+    obj.controlVolume.value = 0;
+    obj.video.volume = obj.controlVolume.value;
+  }
+
+  if (config.autoplay) {
+    controlsVideAndAudioPlayer(obj, "play", element);
+  }
+
+  dispatch("UPDATE_state", {
+    parent: `${element}_klausPlayer`,
+    key: "playBackRateValue",
+    val: 1,
+  });
+
+  if (config.controls.volumen) {
+    dispatch("UPDATE_state", {
+      parent: `${element}_klausPlayer`,
+      key: "volumenValue",
+      val: obj.controlVolume.value,
+    });
+  }
+
+  return obj;
 }
 
 //CONTROLS
@@ -124,13 +172,13 @@ function controlsLottie(lottie, control, valuePercentaje) {
   }
 }
 
-function controlsVideoPlayer(videoPlayer, control, element, params) {
+function controlsVideAndAudioPlayer(sourceMedia, control, element, params) {
   let durationPlayer = "&nbsp;/&nbsp;0:00";
   let seconds = undefined;
   let minutes = undefined;
   let currentTime = "0:00";
 
-  const { video, videoWrapper, controlVolume, progressBar } = videoPlayer;
+  const { media, mediaWrapper, controlVolume, progressBar } = sourceMedia;
 
   let { dispatch, getters } = store;
 
@@ -138,19 +186,19 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
 
   ///
   let updateProgress = () => {
-    let progress = video.currentTime / video.duration;
+    let progress = media.currentTime / media.duration;
     progressBar.style.flexBasis = Math.floor(progress * 1000) / 10 + "%";
 
     currentTimeAndDuration();
   };
   ///
   let currentTimeAndDuration = () => {
-    seconds = Math.floor(video.currentTime);
+    seconds = Math.floor(media.currentTime);
 
     minutes = Math.floor(seconds / 60);
     seconds = seconds - minutes * 60;
 
-    let durationTotal = Math.floor(video.duration);
+    let durationTotal = Math.floor(media.duration);
 
     durationPlayer =
       " &nbsp;/&nbsp;" +
@@ -180,8 +228,9 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
       val: false,
     });
 
-    if (video.paused) {
-      video.play();
+    if (media.paused) {
+      media.play();
+      console.log("ENTRÉ EN PLAY");
 
       dispatch("UPDATE_state", {
         parent: `${element}_klausPlayer`,
@@ -197,7 +246,7 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
         val: window.setInterval(updateProgress, 200),
       });
     } else {
-      video.pause();
+      media.pause();
       dispatch("UPDATE_state", {
         parent: `${element}_klausPlayer`,
         key: "playActive",
@@ -218,7 +267,7 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
     });
     //console.log("VALOR skip", skip)
     let value = Number(params);
-    video.currentTime = video.currentTime + value;
+    media.currentTime = media.currentTime + value;
     return;
   }
 
@@ -229,7 +278,7 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
       val: params,
     });
 
-    video.playbackRate = params;
+    media.playbackRate = params;
     return;
   }
 
@@ -260,7 +309,7 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
       dispatch("UPDATE_state", {
         parent: `${element}_klausPlayer`,
         key: "valorOldVolume",
-        val: video.volume,
+        val: media.volume,
       });
 
       controlVolume.value = 0;
@@ -270,7 +319,7 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
         val: controlVolume.value,
       });
 
-      video.volume = controlVolume.value;
+      media.volume = controlVolume.value;
     } else {
       controlVolume.value =
         MediaPlayer[`${element}_klausPlayer`].valorOldVolume;
@@ -280,7 +329,7 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
         val: controlVolume.value,
       });
 
-      video.volume = MediaPlayer[`${element}_klausPlayer`].valorOldVolume;
+      media.volume = MediaPlayer[`${element}_klausPlayer`].valorOldVolume;
     }
   }
 
@@ -303,7 +352,7 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
     });
 
     let volume = controlVolume.value;
-    video.volume = volume;
+    media.volume = volume;
   }
 
   if (control == "updateCurrentProgress") {
@@ -314,10 +363,10 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
     });
 
     let newProgress =
-      (params.clientX - videoWrapper.getBoundingClientRect().left) /
-      videoWrapper.clientWidth;
+      (params.clientX - mediaWrapper.getBoundingClientRect().left) /
+      mediaWrapper.clientWidth;
     progressBar.style.flexBasis = Math.floor(newProgress * 1000) / 10 + "%";
-    video.currentTime = newProgress * video.duration;
+    media.currentTime = newProgress * media.duration;
 
     currentTimeAndDuration();
   }
@@ -358,60 +407,19 @@ function controlsVideoPlayer(videoPlayer, control, element, params) {
     } else {
       // ...otherwise enter fullscreen mode
       // (Note: can be called on myVid, but here the specific element is used as it will also ensure that the element's children, e.g. the custom controls, go fullscreen also)
-      if (videoWrapper.requestFullscreen) videoWrapper.requestFullscreen();
-      else if (videoWrapper.mozRequestFullScreen)
-        videoWrapper.mozRequestFullScreen();
-      else if (videoWrapper.webkitRequestFullScreen) {
+      if (mediaWrapper.requestFullscreen) mediaWrapper.requestFullscreen();
+      else if (mediaWrapper.mozRequestFullScreen)
+        mediaWrapper.mozRequestFullScreen();
+      else if (mediaWrapper.webkitRequestFullScreen) {
         // Safari 5.1 only allows proper fullscreen on the video element. This also works fine on other WebKit browsers as the following CSS (set in styles.css) hides the default controls that appear again, and
         // ensures that our custom controls are visible:
         // figure[data-fullscreen=true] video::-webkit-media-controls { display:none !important; }
         // figure[data-fullscreen=true] .controls { z-index:2147483647; }
-        video.webkitRequestFullScreen();
-      } else if (videoWrapper.msRequestFullscreen)
-        videoWrapper.msRequestFullscreen();
+        media.webkitRequestFullScreen();
+      } else if (mediaWrapper.msRequestFullscreen)
+        mediaWrapper.msRequestFullscreen();
       setFullscreenData(true);
     }
-  }
-}
-
-function controlsAudioPlayer(audioPlayer, control, valuePercentaje) {
-  if (control == "play") {
-    audioPlayer.play();
-    return;
-  }
-
-  if (control == "pause") {
-    audioPlayer.pause();
-    return;
-  }
-
-  if (control == "forward") {
-    let percentage = audioPlayer.duration * 0.1;
-    let newTime = audioPlayer.currentTime + percentage;
-
-    audioPlayer.currentTime = newTime;
-    audioPlayer.play();
-    return;
-  }
-
-  if (control == "backward") {
-    let percentage = audioPlayer.duration * 0.1;
-    let newTime =
-      audioPlayer.currentTime - percentage < 0
-        ? 0
-        : audioPlayer.currentTime - percentage;
-
-    audioPlayer.currentTime = newTime;
-    audioPlayer.play();
-    return;
-  }
-  if (control == "percentaje") {
-    let duration = audioPlayer.duration;
-
-    let newTime = duration * (valuePercentaje / 100);
-    audioPlayer.currentTime = newTime;
-    audioPlayer.play();
-    return;
   }
 }
 
@@ -421,6 +429,5 @@ export default {
   initAudioPlayer,
 
   controlsLottie,
-  controlsVideoPlayer,
-  controlsAudioPlayer,
+  controlsVideAndAudioPlayer,
 };

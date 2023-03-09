@@ -7,30 +7,41 @@
         Home
       </button>
     </router-link>
-    <div class="flex flex-col h-screen items-center justify-center">
-      <div class="flex justify-center">
-        <audio
-          id="audioPlayer"
-          class="audioPlayer mb-4"
-          src="http://physical-authority.surge.sh/music/2.mp3"
-          controls
-        ></audio>
+    <div class="flex w-full flex-col h-screen items-center justify-center">
+      <div class="flex w-full justify-center">
+        <ControlAnimations
+          classes="w-1/2 aspect-video"
+          source="http://physical-authority.surge.sh/music/2.mp3"
+          domElement="Audio1"
+          type="audioPlayer"
+          :config="{
+            controls: {
+              play: true,
+              volumen: true,
+              backward: true,
+              forward: true,
+              fullscreen: true,
+              playbackRate: true,
+              progressBar: true,
+              time: true,
+            },
+            loop: true,
+            autoplay: true,
+            muted: false,
+          }"
+        ></ControlAnimations>
       </div>
-      <controlAnimations
-        type="audioPlayer"
-        domElement="audioPlayer"
-      ></controlAnimations>
     </div>
   </div>
 </template>
 
 <script>
-import controlAnimations from "@/components/controlAnimations.vue";
+import ControlAnimations from "@/components/controlAnimations.vue";
 export default {
   name: "audioPlayerExample",
   props: {},
   components: {
-    controlAnimations,
+    ControlAnimations,
   },
   data() {
     return {};
