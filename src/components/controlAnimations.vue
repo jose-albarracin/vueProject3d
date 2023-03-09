@@ -23,7 +23,9 @@
       :id="domElement"
       class="w-full custom-video-player-video"
       :src="source"
-      v-on:click="toggleVideo"
+      v-on:click="controls(type, 'play')"
+      :autoplay="config.autoplay"
+      :muted="MediaPlayer[`${domElement}_klausPlayer`]?.StatusAudio"
     ></video>
     <audio
       v-if="type == 'audioPlayer'"
@@ -49,10 +51,10 @@
         <div
           v-if="config.controls.play"
           class="flex custom-video-player-button toggle self-center justify-center flex-1"
-          v-on:click="toggleVideo"
+          v-on:click="controls(type, 'play')"
         >
           <inline-svg
-            v-if="playActive"
+            v-if="MediaPlayer[`${domElement}_klausPlayer`]?.playActive"
             src="icons/pause-solid.svg"
             height="15"
             fill="white"
@@ -60,7 +62,7 @@
           >
           </inline-svg>
           <inline-svg
-            v-if="!playActive"
+            v-if="!MediaPlayer[`${domElement}_klausPlayer`]?.playActive"
             src="icons/play-solid.svg"
             height="15"
             fill="white"
@@ -73,42 +75,50 @@
           class="flex items-center justify-center mt-1 min-w-[70px]"
         >
           <span class="text-[0.7rem] font-semibold mb-0 text-white select-none">
-            {{ currentTime }}
+            {{ MediaPlayer[`${domElement}_klausPlayer`]?.currentTime }}
           </span>
           <span
             class="text-[0.7rem] font-semibold mb-0 text-white select-none"
-            v-html="durationPlayer"
+            v-html="MediaPlayer[`${domElement}_klausPlayer`]?.durationPlayer"
           >
           </span>
         </div>
         <div
           v-if="config.controls.volumen"
           class="custom-video-player-button toggle self-center justify-center pl-3"
-          v-on:click="controlMute"
+          v-on:click="controls(type, 'mute')"
         >
           <inline-svg
-            v-if="volumenValue == 0"
+            v-if="MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue == 0"
             src="icons/volume-xmark-solid.svg"
             height="15"
             fill="white"
             aria-label="Muted"
           ></inline-svg>
           <inline-svg
-            v-if="volumenValue > 0.01 && volumenValue < 0.4"
+            v-if="
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue > 0.01 &&
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue < 0.4
+            "
             src="icons/volume-low-solid.svg"
             height="15"
             fill="white"
             aria-label="low"
           ></inline-svg>
           <inline-svg
-            v-if="volumenValue >= 0.4 && volumenValue < 0.75"
+            v-if="
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue >= 0.4 &&
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue < 0.75
+            "
             src="icons/volume-medium-solid.svg"
             height="15"
             fill="white"
             aria-label="medium"
           ></inline-svg>
           <inline-svg
-            v-if="volumenValue >= 0.75"
+            v-if="
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue >= 0.75
+            "
             src="icons/volume-high-solid.svg"
             height="15"
             fill="white"
@@ -124,13 +134,13 @@
           step="0.05"
           max="1"
           value="1"
-          v-on:change="updateVol"
+          v-on:change="controls(type, 'updateVolume')"
         />
       </div>
       <div
         v-if="config.controls.playbackRate"
         class="relative flex custom-video-player-button toggle self-center justify-center"
-        v-on:click="activarRate"
+        v-on:click="controls(type, 'activeRate')"
       >
         <inline-svg
           src="icons/gauge-solid.svg"
@@ -139,63 +149,99 @@
           aria-label="My image"
         ></inline-svg>
         <div
-          v-if="playBackRateButtom"
+          v-if="MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateButtom"
           class="absolute bottom-[30px] px-79 px-md-50 bg-white flex flex-row md:flex-col items-center justify-center text-[0.9rem] font-medium text-gray-500 shadow-lg mb-3 playbackrate"
           style="min-width: max; letter-spacing: 0px !important"
         >
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 0.25 ? 'bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(0.25)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              0.25
+                ? 'bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 0.25)"
           >
             <span class="mb-0 text-white">0.25</span>
           </div>
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 0.5 ? '!bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(0.5)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 0.5
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 0.5)"
           >
             <span class="mb-0 text-white">0.5</span>
           </div>
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 0.75 ? '!bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(0.75)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              0.75
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 0.75)"
           >
             <span class="mb-0 text-white">0.75</span>
           </div>
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 1 ? '!bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(1)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 1
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1)"
           >
             <span class="mb-0 text-white">1</span>
           </div>
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 1.25 ? '!bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(1.25)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              1.25
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1.25)"
           >
             <span class="mb-0 text-white">1.25</span>
           </div>
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 1.5 ? '!bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(1.5)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 1.5
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1.5)"
           >
             <span class="mb-0 text-white">1.5</span>
           </div>
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 1.75 ? '!bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(1.75)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              1.75
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1.75)"
           >
             <span class="mb-0 text-white">1.75</span>
           </div>
           <div
             class="w-full px-4 py-3 buttom-rate"
-            :class="playBackRateValue == 2 ? '!bg-[#4d49ef]' : ''"
-            v-on:click="controlRate(2)"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 2
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 2)"
           >
             <span class="mb-0 text-white">2</span>
           </div>
@@ -204,7 +250,7 @@
       <div
         v-if="config.controls.backward"
         class="custom-video-player-button toggle self-center justify-center hidden md:flex"
-        v-on:click="forwardAndBackward(-10)"
+        v-on:click="controls(type, 'forwardBackward', -10)"
       >
         <inline-svg
           src="icons/backward-solid.svg"
@@ -216,7 +262,7 @@
       <div
         v-if="config.controls.forward"
         class="custom-video-player-button toggle self-center justify-center hidden md:flex"
-        v-on:click="forwardAndBackward(10)"
+        v-on:click="controls(type, 'forwardBackward', 10)"
       >
         <inline-svg
           src="icons/forward-solid.svg"
@@ -227,7 +273,7 @@
       </div>
       <div
         class="custom-video-player-button toggle self-center justify-center hidden md:flex"
-        v-on:click="goFullScreen"
+        v-on:click="controls(type, 'fullscreen')"
       >
         <inline-svg
           src="icons/expand-solid.svg"
@@ -248,6 +294,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import InlineSvg from "vue-inline-svg";
 
 import utils from "../util/MediaPlayer";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "controlAnimations",
@@ -294,7 +341,8 @@ export default {
     };
   },
   methods: {
-    controls(type, controlAction) {
+    ...mapActions(["UPDATE_STATE"]),
+    controls(type, controlAction, params) {
       if (type == "lottieFiles") {
         return utils.controlsLottie(
           this.lottieAnimation,
@@ -307,7 +355,8 @@ export default {
         return utils.controlsVideoPlayer(
           this.myVideo,
           controlAction,
-          this.valuePercentaje
+          this.domElement,
+          params
         );
       }
       if (type == "audioPlayer") {
@@ -524,203 +573,7 @@ export default {
         return 4 / 3;
       }
     },
-    controlRate(value) {
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      this.playBackRateValue = value;
-      myVid.playbackRate = value;
-    },
 
-    updateVol() {
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      const controlVol = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-slider[name="volume"]`
-      );
-
-      this.playBackRateButtom = false;
-      this.volumenValue = controlVol.value;
-      this.StatusAudio = false;
-
-      let volume = controlVol.value;
-      myVid.volume = volume;
-    },
-
-    toggleVideo() {
-      //console.log("me ejecuté")
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      //const controlPlay = this.$el.querySelector(".custom-video-player-button")
-      this.playBackRateButtom = false;
-      if (myVid.paused) {
-        myVid.play();
-        this.playActive = !this.playActive;
-        //console.log(this.playActive)
-        //controlPlay.innerHTML = "❚ ❚"
-        this.updateProgress();
-        this.progression = window.setInterval(this.updateProgress, 200);
-      } else {
-        myVid.pause();
-        this.playActive = !this.playActive;
-        //controlPlay.innerHTML = "►"
-        clearInterval(this.progression);
-      }
-      //console.log(this.playActive)
-    },
-
-    updateCurrentPos(e) {
-      // offset of the progress bar / video wrapper width
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      const vidWrapper = this.$el.parentElement.querySelector(
-        `#${this.domElement}.custom-video`
-      );
-
-      const progressBar = this.$el.querySelector(
-        `#${this.domElement} .custom-video-progress-filled`
-      );
-
-      this.playBackRateButtom = false;
-
-      let newProgress =
-        (e.clientX - vidWrapper.getBoundingClientRect().left) /
-        vidWrapper.clientWidth;
-      progressBar.style.flexBasis = Math.floor(newProgress * 1000) / 10 + "%";
-      myVid.currentTime = newProgress * myVid.duration;
-
-      this.currentTimeAndDuration();
-    },
-    updateProgress() {
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      const progressBar = this.$el.querySelector(
-        `#${this.domElement} .custom-video-progress-filled`
-      );
-
-      let progress = myVid.currentTime / myVid.duration;
-      progressBar.style.flexBasis = Math.floor(progress * 1000) / 10 + "%";
-
-      this.currentTimeAndDuration();
-    },
-
-    currentTimeAndDuration() {
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      this.segundos = Math.floor(myVid.currentTime);
-
-      this.minutos = Math.floor(this.segundos / 60);
-      this.segundos = this.segundos - this.minutos * 60;
-
-      let durationTotal = Math.floor(myVid.duration);
-
-      this.durationPlayer =
-        " &nbsp;/&nbsp;" +
-        (durationTotal > 60 ? Math.floor(durationTotal / 60) : "0") +
-        ":" +
-        (durationTotal % 60);
-      this.currentTime =
-        this.minutos + ":" + this.segundos.toString().padStart(2, "0");
-
-      //console.log("currentTime: ", this.currentTime)
-      //console.log("Duration: ", this.duration)
-    },
-
-    activarRate() {
-      this.playBackRateButtom = !this.playBackRateButtom;
-    },
-
-    forwardAndBackward(skip) {
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      this.playBackRateButtom = false;
-      //console.log("VALOR skip", skip)
-      let value = Number(skip);
-      myVid.currentTime = myVid.currentTime + value;
-    },
-
-    controlMute() {
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      const controlVol = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-slider[name="volume"]`
-      );
-      this.StatusAudio = !this.StatusAudio;
-      this.playBackRateButtom = false;
-
-      if (this.StatusAudio) {
-        //myVid.volume = volume
-
-        this.valorOldVolume = myVid.volume;
-
-        controlVol.value = 0;
-        this.volumenValue = controlVol.value;
-        myVid.volume = controlVol.value;
-      } else {
-        controlVol.value = this.valorOldVolume;
-        this.volumenValue = controlVol.value;
-        myVid.volume = this.valorOldVolume;
-      }
-    },
-    goFullScreen() {
-      const vidWrapper = this.$el.parentElement.querySelector(
-        `#${this.domElement}.custom-video`
-      );
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      this.playBackRateButtom = false;
-      /*  if (myVid.webkitSupportsFullscreen) {myVid.webkitEnterFullScreen()} */
-      //console.log("es fullscreen?", this.isFullScreen())
-      if (this.isFullScreen()) {
-        // ...exit fullscreen mode
-        // (Note: this can only be called on myVid)
-        //myVid.webkitCancelFullScreen()
-        if (document.exitFullscreen) document.exitFullscreen();
-        else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-        else if (document.webkitCancelFullScreen)
-          document.webkitCancelFullScreen();
-        else if (document.msExitFullscreen) document.msExitFullscreen();
-        this.setFullscreenData(false);
-      } else {
-        // ...otherwise enter fullscreen mode
-        // (Note: can be called on myVid, but here the specific element is used as it will also ensure that the element's children, e.g. the custom controls, go fullscreen also)
-        if (vidWrapper.requestFullscreen) vidWrapper.requestFullscreen();
-        else if (vidWrapper.mozRequestFullScreen)
-          vidWrapper.mozRequestFullScreen();
-        else if (vidWrapper.webkitRequestFullScreen) {
-          // Safari 5.1 only allows proper fullscreen on the video element. This also works fine on other WebKit browsers as the following CSS (set in styles.css) hides the default controls that appear again, and
-          // ensures that our custom controls are visible:
-          // figure[data-fullscreen=true] video::-webkit-media-controls { display:none !important; }
-          // figure[data-fullscreen=true] .controls { z-index:2147483647; }
-          myVid.webkitRequestFullScreen();
-        } else if (vidWrapper.msRequestFullscreen)
-          vidWrapper.msRequestFullscreen();
-        this.setFullscreenData(true);
-      }
-    },
-    isFullScreen() {
-      return !!(
-        document.fullScreen ||
-        document.webkitIsFullScreen ||
-        document.mozFullScreen ||
-        document.msFullscreenElement ||
-        document.fullscreenElement
-      );
-    },
-    setFullscreenData(state) {
-      const vidWrapper = this.$el.parentElement.querySelector(
-        `#${this.domElement}.custom-video`
-      );
-      vidWrapper.setAttribute("data-fullscreen", !!state);
-    },
     ePointerover() {
       this.drag = true;
       //console.log("entro", this.grap);
@@ -742,14 +595,15 @@ export default {
       //console.log("solte", this.grap);
     },
 
-    ePointermove(e) {
+    ePointermove(event) {
       if (this.drag && this.grap) {
-        // console.log("actualicé", this.drag, this.grap);
-        this.updateCurrentPos(e);
+        this.controls(this.type, "updateCurrentProgress", event);
       }
     },
   },
-  computed() {},
+  computed: {
+    ...mapGetters(["MediaPlayer"]),
+  },
 
   mounted() {
     //ThreeJs
@@ -762,36 +616,7 @@ export default {
     }
     //Video
     if (this.type == "videoPlayer") {
-      const myVid = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-video`
-      );
-      //Inicializacion de minutos
-
-      this.minutos = 0;
-      //Inicializacion de estado de audio inicial
-
-      const controlVol = this.$el.querySelector(
-        `#${this.domElement} .custom-video-player-slider[name="volume"]`
-      );
-
-      if (this.StatusAudio) {
-        controlVol.value = 0;
-        myVid.volume = controlVol.value;
-      }
-
-      //Inicializacion de estado de autoplay
-
-      if (this.config.autoplay) {
-        this.toggleVideo();
-      }
-      //Estado inicial del valor playBackRate
-      this.playBackRateValue = 1;
-
-      //Estado inicial del volumen
-      if (this.config.controls.volumen) this.volumenValue = controlVol.value;
-      this.myVideo = utils.initVideoPlayer(this.domElement);
-
-      console.log("mi video: ", this.myVideo);
+      this.myVideo = utils.initVideoPlayer(this.domElement, this.config);
     }
 
     //Audio
@@ -805,6 +630,15 @@ export default {
       this.render.forceContextLoss();
       this.render.dispose();
       this.destroy = false;
+    }
+    if (this.type == "videoPlayer") {
+      clearInterval(
+        this.MediaPlayer[`${this.domElement}_klausPlayer`].progression
+      );
+      this.$store.dispatch("UPDATE_state", {
+        key: `${this.domElement}_klausPlayer`,
+        val: undefined,
+      });
     }
   },
 };

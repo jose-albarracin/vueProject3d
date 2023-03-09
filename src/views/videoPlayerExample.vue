@@ -7,26 +7,54 @@
         Home
       </button>
     </router-link>
-    <div class="flex justify-center"></div>
-    <ControlAnimations
-      classes="w-full "
-      source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-      domElement="video1"
-      type="videoPlayer"
-      :config="{
-        controls: {
-          play: true,
-          volumen: true,
-          backward: true,
-          forward: true,
-          fullscreen: true,
-          playbackRate: true,
-          progressBar: true,
-          time: true,
-        },
-        loop: true,
-      }"
-    ></ControlAnimations>
+    <div class="container max-w-6xl mx-auto">
+      <div class="flex justify-center">
+        <ControlAnimations
+          classes="w-1/2"
+          source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          domElement="video1"
+          type="videoPlayer"
+          :config="{
+            controls: {
+              play: true,
+              volumen: true,
+              backward: true,
+              forward: true,
+              fullscreen: true,
+              playbackRate: true,
+              progressBar: true,
+              time: true,
+            },
+            loop: true,
+            autoplay: false,
+            muted: false,
+          }"
+        ></ControlAnimations>
+      </div>
+      <div class="flex justify-center">
+        <ControlAnimations
+          classes="w-1/2"
+          source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          domElement="video2"
+          type="videoPlayer"
+          :config="{
+            controls: {
+              play: true,
+              volumen: true,
+              backward: true,
+              forward: true,
+              fullscreen: true,
+              playbackRate: true,
+              progressBar: true,
+              time: true,
+            },
+            loop: true,
+            autoplay: false,
+            muted: false,
+          }"
+        ></ControlAnimations>
+      </div>
+    </div>
   </div>
 </template>
 
