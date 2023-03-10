@@ -7,27 +7,64 @@
         Home
       </button>
     </router-link>
-    <div class="flex justify-center">
-      <video
-        id="videoExample"
-        class="videoExample"
-        src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-      ></video>
+    <div class="container max-w-6xl mx-auto">
+      <div class="flex justify-center">
+        <ControlAnimations
+          classes="w-1/2 "
+          source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          domElement="video1"
+          type="videoPlayer"
+          :config="{
+            controls: {
+              play: true,
+              volumen: true,
+              backward: true,
+              forward: true,
+              fullscreen: true,
+              playbackRate: true,
+              progressBar: true,
+              time: true,
+            },
+            loop: true,
+            autoplay: false,
+            muted: false,
+          }"
+        ></ControlAnimations>
+      </div>
+      <div class="flex justify-center">
+        <ControlAnimations
+          classes="w-1/2"
+          source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          domElement="video2"
+          type="videoPlayer"
+          :config="{
+            controls: {
+              play: true,
+              volumen: true,
+              backward: true,
+              forward: true,
+              fullscreen: true,
+              playbackRate: true,
+              progressBar: true,
+              time: true,
+            },
+            loop: true,
+            autoplay: false,
+            muted: false,
+          }"
+        ></ControlAnimations>
+      </div>
     </div>
-    <controlAnimations
-      type="videoPlayer"
-      domElement="videoExample"
-    ></controlAnimations>
   </div>
 </template>
 
 <script>
-import controlAnimations from "@/components/controlAnimations.vue";
+import ControlAnimations from "@/components/controlAnimations.vue";
 export default {
   name: "videoPlayerExample",
   props: {},
   components: {
-    controlAnimations,
+    ControlAnimations,
   },
   data() {
     return {};

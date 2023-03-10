@@ -7,16 +7,29 @@
         Home
       </button>
     </router-link>
-    <div class="container mx-auto max-w-6xl px-3">
+    <div class="container mx-auto max-w-6xl px-3 my-9">
       <div class="flex justify-center">
         <ControlAnimations
-          classes="w-full border border-red-500 bg-blue-900"
+          classes="w-full "
           source="models/buster_drone/scene.gltf"
-          domElement="myCanvas"
+          domElement="threejs1"
           type="AnimationMixer"
           :config="{
             mode: 'animation',
             aspectRatio: 'panoramic',
+            controls: {
+              play: true,
+              backward: true,
+              forward: true,
+              fullscreen: true,
+              playbackRate: true,
+              progressBar: true,
+              time: true,
+            },
+            loop: true,
+            autoplay: true,
+
+            backgroundColor: '#9a9a9ab8',
           }"
         ></ControlAnimations>
       </div>

@@ -1,68 +1,318 @@
 <template>
-  <div class="relative" :class="classes">
+  <div
+    class="custom-video custom-video-player"
+    :class="classes"
+    :id="domElement"
+    v-on:pointerleave="ePointerleave"
+    v-on:pointermove="ePointermove"
+    :style="{
+      backgroundImage:
+        'url(' +
+        `${
+          type == 'audioPlayer'
+            ? config.backgroundImage
+              ? config.backgroundImage
+              : 'images/audioBGdefault.jpg'
+            : ''
+        }` +
+        ')',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center',
+      backgroundSize: 'cover',
+      backgroundColor: `${
+        type == 'AnimationMixer' ? config.backgroundColor : 'transparent'
+      }`,
+    }"
+  >
     <div
+      v-if="type == 'AnimationMixer'"
       id="parentThreeJS"
       class="w-full"
       :class="
         config.aspectRatio == 'panoramic' ? 'aspect-video' : 'aspect-[4/3]'
+      "
+      v-on:click="
+        () => {
+          if (type !== 'AnimationMixer') {
+            controls(type, 'play');
+          }
+        }
       "
     >
       <canvas class="" :id="domElement"></canvas>
     </div>
 
     <div
-      class="py-2 hidden md:flex gap-4 w-full justify-center items-center absolute top-[100%] left-1/2 -translate-x-1/2 -translate-y-[100%] bg-black/80"
-    >
-      <button
-        @click="
-          () => {
-            controls(type, 'backward');
-          }
-        "
-        class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
-      >
-        backward
-      </button>
+      v-if="type == 'lottieFiles'"
+      class="lottieRef w-full h-fit"
+      :id="domElement"
+      v-on:click="controls(type, 'play')"
+    />
+    <video
+      v-if="type == 'videoPlayer'"
+      :id="domElement"
+      class="w-full custom-video-player-video"
+      :src="source"
+      v-on:click="controls(type, 'play')"
+      :autoplay="config.autoplay"
+      :muted="MediaPlayer[`${domElement}_klausPlayer`]?.StatusAudio"
+    ></video>
+    <div class="w-full h-full" v-on:click="controls(type, 'play')">
+      <audio
+        v-if="type == 'audioPlayer'"
+        :id="domElement"
+        class="w-full custom-video-player-video"
+        :src="source"
+      ></audio>
+    </div>
 
-      <button
-        @click="
-          () => {
-            controls(type, 'forward');
-          }
-        "
-        class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+    <div class="custom-video-player-controls">
+      <div
+        v-if="config.controls.progressBar"
+        class="custom-video-progress"
+        v-on:click="controls(type, 'updateCurrentProgress', $event)"
+        v-on:pointerover="ePointerover"
+        v-on:pointerdown="ePointerdown"
+        v-on:pointerup="ePointerup"
+        v-on:pointermove="ePointermove"
       >
-        forward
-      </button>
-
-      <button
-        @click="
-          () => {
-            controls(type, 'pause');
-          }
-        "
-        class="bg-blue-400 h-fit text-white border border-blue-400 hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+        <div class="custom-video-progress-filled bg-blue-600"></div>
+      </div>
+      <div class="flex justify-start flex-wrap py-1">
+        <div
+          v-if="config.controls.play"
+          class="flex custom-video-player-button toggle self-center justify-center flex-1"
+          v-on:click="controls(type, 'play')"
+        >
+          <inline-svg
+            v-if="MediaPlayer[`${domElement}_klausPlayer`]?.playActive"
+            src="icons/pause-solid.svg"
+            height="15"
+            fill="white"
+            aria-label="Pause"
+          >
+          </inline-svg>
+          <inline-svg
+            v-if="!MediaPlayer[`${domElement}_klausPlayer`]?.playActive"
+            src="icons/play-solid.svg"
+            height="15"
+            fill="white"
+            aria-label="Play"
+          >
+          </inline-svg>
+        </div>
+        <div
+          v-if="config.controls.time"
+          class="flex items-center justify-center mt-1 min-w-[70px]"
+        >
+          <span class="text-[0.7rem] font-semibold mb-0 text-white select-none">
+            {{ MediaPlayer[`${domElement}_klausPlayer`]?.currentTime }}
+          </span>
+          <span
+            class="text-[0.7rem] font-semibold mb-0 text-white select-none"
+            v-html="MediaPlayer[`${domElement}_klausPlayer`]?.durationPlayer"
+          >
+          </span>
+        </div>
+        <div
+          v-if="config.controls.volumen"
+          class="custom-video-player-button toggle self-center justify-center pl-3"
+          v-on:click="controls(type, 'mute')"
+        >
+          <inline-svg
+            v-if="MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue == 0"
+            src="icons/volume-xmark-solid.svg"
+            height="15"
+            fill="white"
+            aria-label="Muted"
+          ></inline-svg>
+          <inline-svg
+            v-if="
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue > 0.01 &&
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue < 0.4
+            "
+            src="icons/volume-low-solid.svg"
+            height="15"
+            fill="white"
+            aria-label="low"
+          ></inline-svg>
+          <inline-svg
+            v-if="
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue >= 0.4 &&
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue < 0.75
+            "
+            src="icons/volume-medium-solid.svg"
+            height="15"
+            fill="white"
+            aria-label="medium"
+          ></inline-svg>
+          <inline-svg
+            v-if="
+              MediaPlayer[`${domElement}_klausPlayer`]?.volumenValue >= 0.75
+            "
+            src="icons/volume-high-solid.svg"
+            height="15"
+            fill="white"
+            aria-label="High"
+          ></inline-svg>
+        </div>
+        <input
+          v-if="config.controls.volumen"
+          class="custom-video-player-slider flex-1 max-w-[100px]"
+          type="range"
+          name="volume"
+          min="0"
+          step="0.05"
+          max="1"
+          value="1"
+          v-on:change="controls(type, 'updateVolume')"
+        />
+      </div>
+      <div
+        v-if="config.controls.playbackRate"
+        class="relative flex custom-video-player-button toggle self-center justify-center"
+        v-on:click="controls(type, 'activeRate')"
       >
-        Pause
-      </button>
-
-      <button
-        @click="
-          () => {
-            controls(type, 'play');
-          }
-        "
-        class="bg-blue-400 h-fit text-white hover:bg-white hover:text-blue-400 hover:border hover:border-blue-400 px-4 py-1 rounded"
+        <inline-svg
+          src="icons/gauge-solid.svg"
+          height="15"
+          fill="white"
+          aria-label="My image"
+        ></inline-svg>
+        <div
+          v-if="MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateButtom"
+          class="absolute bottom-[30px] px-79 px-md-50 bg-white flex flex-row md:flex-col items-center justify-center text-[0.9rem] font-medium text-gray-500 shadow-lg mb-3 playbackrate"
+          style="min-width: max; letter-spacing: 0px !important"
+        >
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              0.25
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 0.25)"
+          >
+            <span class="mb-0 text-white">0.25</span>
+          </div>
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 0.5
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 0.5)"
+          >
+            <span class="mb-0 text-white">0.5</span>
+          </div>
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              0.75
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 0.75)"
+          >
+            <span class="mb-0 text-white">0.75</span>
+          </div>
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 1
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1)"
+          >
+            <span class="mb-0 text-white">1</span>
+          </div>
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              1.25
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1.25)"
+          >
+            <span class="mb-0 text-white">1.25</span>
+          </div>
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 1.5
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1.5)"
+          >
+            <span class="mb-0 text-white">1.5</span>
+          </div>
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
+              1.75
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 1.75)"
+          >
+            <span class="mb-0 text-white">1.75</span>
+          </div>
+          <div
+            class="w-full px-4 py-3 buttom-rate"
+            :class="
+              MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue == 2
+                ? '!bg-[#4d49ef]'
+                : ''
+            "
+            v-on:click="controls(type, 'rate', 2)"
+          >
+            <span class="mb-0 text-white">2</span>
+          </div>
+        </div>
+      </div>
+      <div
+        v-if="config.controls.backward"
+        class="custom-video-player-button toggle self-center justify-center hidden md:flex"
+        v-on:click="controls(type, 'forwardBackward', -10)"
       >
-        Play
-      </button>
-
-      <input
-        class="p-3 border border-blue-400 h-8"
-        type="number"
-        v-model="valuePercentaje"
-        @keyup.enter="controls(type, 'percentaje')"
-      />
+        <inline-svg
+          src="icons/backward-solid.svg"
+          height="15"
+          fill="white"
+          aria-label="backward"
+        ></inline-svg>
+      </div>
+      <div
+        v-if="config.controls.forward"
+        class="custom-video-player-button toggle self-center justify-center hidden md:flex"
+        v-on:click="controls(type, 'forwardBackward', 10)"
+      >
+        <inline-svg
+          src="icons/forward-solid.svg"
+          height="15"
+          fill="white"
+          aria-label="forward"
+        ></inline-svg>
+      </div>
+      <div
+        class="custom-video-player-button toggle self-center justify-center hidden md:flex py-1"
+        v-on:click="controls(type, 'fullscreen')"
+      >
+        <inline-svg
+          src="icons/expand-solid.svg"
+          height="15"
+          fill="white"
+          aria-label="fullscreen"
+        ></inline-svg>
+      </div>
     </div>
   </div>
 </template>
@@ -72,10 +322,14 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
+import InlineSvg from "vue-inline-svg";
+
 import utils from "../util/MediaPlayer";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "controlAnimations",
+  components: { InlineSvg },
   props: {
     classes: String,
     type: String,
@@ -87,65 +341,115 @@ export default {
   },
   data() {
     return {
-      forward: false,
+      drag: undefined,
+      grap: undefined,
+      currentTime: "0:00",
+      durationPlayer: "&nbsp;/&nbsp;0:00",
+      playBackRateButtom: false,
+      playActive: false,
+      progression: undefined,
+      StatusAudio: this.config.muted,
+      valorOldVolume: 1,
+      volumenValue: undefined,
+      playBackRateValue: 1,
+      //
+      forwardBackward: false,
       backward: false,
       play: false,
       duration: undefined,
       pause: false,
       valuePercentaje: undefined,
-      isNewTime: false,
+      rate: false,
       lottieAnimation: undefined,
       myVideo: undefined,
       myAudio: undefined,
+      myMedia: undefined,
       canvas: undefined,
       render: THREE.WebGLRenderer,
       animate: undefined,
       destroy: true,
       widthThreeJS: 1270,
       heightThreeJS: 720,
+      valueForwardBackward: 0,
     };
   },
   methods: {
-    controls(type, controlAction) {
+    ...mapActions(["UPDATE_STATE"]),
+    controls(type, controlAction, params) {
       if (type == "lottieFiles") {
         return utils.controlsLottie(
           this.lottieAnimation,
           controlAction,
-          this.valuePercentaje
+          this.domElement,
+          params
         );
       }
 
-      if (type == "videoPlayer") {
-        return utils.controlsVideoPlayer(
-          this.myVideo,
+      if (type == "videoPlayer" || type == "audioPlayer") {
+        return utils.controlsVideAndAudioPlayer(
+          this.myMedia,
           controlAction,
-          this.valuePercentaje
-        );
-      }
-      if (type == "audioPlayer") {
-        return utils.controlsAudioPlayer(
-          this.myAudio,
-          controlAction,
-          this.valuePercentaje
+          this.domElement,
+          params
         );
       }
 
       if (type == "AnimationMixer") {
         let controlsThreeJS = {
           play: () => {
-            this.play = true;
+            let playActive =
+              this.MediaPlayer[`${this.domElement}_klausPlayer`].playActive;
+
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateButtom",
+              val: false,
+            });
+
+            if (playActive) {
+              this.pause = true;
+            } else {
+              this.play = true;
+              this.pause = false;
+            }
+
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playActive",
+              val: !this.MediaPlayer[`${this.domElement}_klausPlayer`]
+                .playActive,
+            });
           },
           pause: () => {
             this.pause = true;
           },
-          backward: () => {
-            this.backward = true;
+
+          activeRate: () => {
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateButtom",
+              val: !this.MediaPlayer[`${this.domElement}_klausPlayer`]
+                .playBackRateButtom,
+            });
           },
-          forward: () => {
-            this.forward = true;
+
+          rate: () => {
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateValue",
+              val: params,
+            });
+            this.rate = true;
           },
-          percentaje: () => {
-            this.isNewTime = true;
+          forwardBackward: () => {
+            this.valueForwardBackward = params;
+            this.forwardBackward = true;
+          },
+          fullscreen: () => {
+            utils.fullScreen(
+              this.MediaPlayer[`${this.domElement}_klausPlayer`],
+              this.domElement
+            );
           },
         };
 
@@ -160,7 +464,7 @@ export default {
       let mixer;
       let duration;
       let animation;
-      this.canvas = document.getElementById(`${this.domElement}`);
+      this.canvas = document.querySelector(`canvas#${this.domElement}`);
       let dataParent = document.getElementById(`parentThreeJS`);
       this.widthThreeJS = dataParent.clientWidth;
       this.heightThreeJS = dataParent.clientHeight;
@@ -257,29 +561,60 @@ export default {
 
         if (mode == "static") return render();
 
-        if (this.isNewTime) {
-          let percentageValue = this.duration * (this.valuePercentaje / 100);
-          mixer.setTime(percentageValue);
-          mixer._actions[0].time = percentageValue;
+        if (this.rate) {
+          mixer.timeScale =
+            this.MediaPlayer[
+              `${this.domElement}_klausPlayer`
+            ].playBackRateValue;
 
-          animation.paused = false;
-          mixer.timeScale = 1;
-
-          this.isNewTime = false;
+          this.rate = false;
         }
 
-        if (this.forward) {
-          let percentage = duration * 0.1;
+        if (this.forwardBackward) {
+          let playActive =
+            this.MediaPlayer[`${this.domElement}_klausPlayer`].playActive;
+
+          let percentage = (duration * this.valueForwardBackward) / 100;
 
           let newtime =
-            percentage + mixer._actions[0].time > duration
+            mixer._actions[0].time + percentage < 0
+              ? 0
+              : mixer._actions[0].time + percentage >= duration
               ? duration
               : percentage + mixer._actions[0].time;
-
-          mixer.setTime(newtime);
+          /*  console.log({
+            mixer,
+            newtime,
+            percentage,
+            mixerTime: mixer._actions[0].time,
+          }); */
           mixer._actions[0].time = newtime;
+          mixer.time = newtime;
+          //mixer.setTime(newtime);
 
-          this.forward = false;
+          mixer._actions[0].paused = false;
+          animation.paused = false;
+
+          if (!playActive) {
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateValue",
+              val: 1,
+            });
+          }
+
+          mixer.timeScale =
+            this.MediaPlayer[
+              `${this.domElement}_klausPlayer`
+            ].playBackRateValue;
+
+          this.$store.dispatch("UPDATE_state", {
+            parent: `${this.domElement}_klausPlayer`,
+            key: "playActive",
+            val: true,
+          });
+
+          this.forwardBackward = false;
         }
 
         //Backward 10%
@@ -291,32 +626,69 @@ export default {
               ? 0
               : mixer._actions[0].time - percentage;
 
-          mixer.setTime(newTime);
+          //mixer.setTime(newTime);
           mixer._actions[0].time = newTime;
-          animation.paused = false;
-          mixer.timeScale = 1;
 
           this.backward = false;
         }
 
         //Pause animation
-        if (this.pause) {
-          mixer.timeScale = 0;
-          this.pause = false;
+        if (mixer) {
+          if (this.pause) {
+            mixer.timeScale = 0;
+          }
         }
 
         //Play animation
         if (this.play) {
-          mixer.timeScale = 1;
+          mixer.timeScale =
+            this.MediaPlayer[
+              `${this.domElement}_klausPlayer`
+            ].playBackRateValue;
           this.play = false;
         }
 
         //Mixer de animacion
         if (mixer) {
-          if (Math.round(mixer.time) >= duration) {
-            mixer._actions[0].time = duration;
-            mixer.timeScale = 0;
+          //mixer._actions[0].time = 0;
+          // console.log("mixer actiontime: ", mixer._actions[0].time);
+          animation.paused = false;
+          // console.log("MIXER:", mixer);
+          if (this.config.loop) {
+            if (Math.round(mixer.time) >= duration) {
+              mixer.time = 0;
+              mixer._actions[0].time = 0;
+              mixer._actions[0].paused = false;
+              mixer.timeScale =
+                this.MediaPlayer[
+                  `${this.domElement}_klausPlayer`
+                ].playBackRateValue;
+
+              //mixer.timeScale = 1;
+            }
+
+            // mixer.timeScale = 1;
+          } else {
+            if (Math.round(mixer.time) >= duration) {
+              mixer._actions[0].time = duration;
+              mixer._actions[0].paused = false;
+              mixer.timeScale = 0;
+
+              //End animation set play false
+
+              this.$store.dispatch("UPDATE_state", {
+                parent: `${this.domElement}_klausPlayer`,
+                key: "playActive",
+                val: false,
+              });
+              this.$store.dispatch("UPDATE_state", {
+                parent: `${this.domElement}_klausPlayer`,
+                key: "playBackRateValue",
+                val: 0,
+              });
+            }
           }
+
           mixer.update(clock.getDelta());
         }
 
@@ -336,21 +708,94 @@ export default {
         return 4 / 3;
       }
     },
+
+    ePointerover() {
+      this.drag = true;
+      //console.log("entro", this.grap);
+    },
+
+    ePointerleave() {
+      this.drag = true;
+      this.grap = false;
+      //  console.log("dejo", this.grap);
+    },
+
+    ePointerdown() {
+      this.grap = this.drag;
+      // console.log("valor grap", this.grap);
+    },
+
+    ePointerup() {
+      this.grap = false;
+      //console.log("solte", this.grap);
+    },
+
+    ePointermove(event) {
+      if (this.drag && this.grap) {
+        this.controls(this.type, "updateCurrentProgress", event);
+      }
+    },
   },
-  computed() {},
+  computed: {
+    ...mapGetters(["MediaPlayer"]),
+  },
 
   mounted() {
+    //ThreeJs
     if (this.type == "AnimationMixer") {
       this.initThreeJs();
+      const init = {
+        durationPlayer: "&nbsp;/&nbsp;0:00",
+        playBackRateButtom: false,
+        playActive: false,
+        progression: undefined,
+        StatusAudio: undefined,
+        valorOldVolume: 1,
+        volumenValue: undefined,
+        playBackRateValue: 1,
+        seconds: undefined,
+        minutes: undefined,
+        currentTime: "0:00",
+      };
+
+      const elementsThreejs = {
+        media: document.querySelector(`canvas#${this.domElement}`),
+        mediaWrapper: document.querySelector(
+          `#${this.domElement}.custom-video`
+        ),
+      };
+
+      this.$store.dispatch("UPDATE_state", {
+        key: [`${this.domElement}_klausPlayer`],
+        val: { ...elementsThreejs, ...init },
+      });
+
+      if (this.config.autoplay) {
+        this.$store.dispatch("UPDATE_state", {
+          parent: `${this.domElement}_klausPlayer`,
+          key: "playActive",
+          val: true,
+        });
+      } else {
+        this.pause = true;
+      }
     }
+    //Lottie
     if (this.type == "lottieFiles") {
-      this.lottieAnimation = utils.initLottie(this.domElement, this.source);
+      this.lottieAnimation = utils.initLottie(
+        this.domElement,
+        this.source,
+        this.config
+      );
     }
+    //Video
     if (this.type == "videoPlayer") {
-      this.myVideo = utils.initVideoPlayer(this.domElement);
+      this.myMedia = utils.initVideoPlayer(this.domElement, this.config);
     }
+
+    //Audio
     if (this.type == "audioPlayer") {
-      this.myAudio = utils.initAudioPlayer(this.domElement);
+      this.myMedia = utils.initAudioPlayer(this.domElement, this.config);
     }
   },
   beforeUnmount() {
@@ -359,6 +804,24 @@ export default {
       this.render.forceContextLoss();
       this.render.dispose();
       this.destroy = false;
+    }
+    if (this.type == "videoPlayer" || this.type == "audioPlayer") {
+      clearInterval(
+        this.MediaPlayer[`${this.domElement}_klausPlayer`].progression
+      );
+      this.$store.dispatch("UPDATE_state", {
+        key: `${this.domElement}_klausPlayer`,
+        val: undefined,
+      });
+    }
+    if (this.type == "lottieFiles") {
+      clearInterval(
+        this.MediaPlayer[`${this.domElement}_klausPlayer`].progression
+      );
+      this.$store.dispatch("UPDATE_state", {
+        key: `${this.domElement}_klausPlayer`,
+        val: undefined,
+      });
     }
   },
 };
