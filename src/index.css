@@ -76,7 +76,7 @@ body {
   transform: translateY(100%) translateY(-5px);
   transition: all 0.3s;
   flex-wrap: wrap;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .custom-video-player:hover .custom-video-player-controls {

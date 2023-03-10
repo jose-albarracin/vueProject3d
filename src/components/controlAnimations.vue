@@ -19,6 +19,9 @@
       backgroundRepeat: 'no-repeat',
       backgroundPosition: 'center',
       backgroundSize: 'cover',
+      backgroundColor: `${
+        type == 'AnimationMixer' ? config.backgroundColor : 'transparent'
+      }`,
     }"
   >
     <div
@@ -28,11 +31,23 @@
       :class="
         config.aspectRatio == 'panoramic' ? 'aspect-video' : 'aspect-[4/3]'
       "
+      v-on:click="
+        () => {
+          if (type !== 'AnimationMixer') {
+            controls(type, 'play');
+          }
+        }
+      "
     >
       <canvas class="" :id="domElement"></canvas>
     </div>
 
-    <div v-if="type == 'lottieFiles'" class="w-full h-fit" :id="domElement" />
+    <div
+      v-if="type == 'lottieFiles'"
+      class="lottieRef w-full h-fit"
+      :id="domElement"
+      v-on:click="controls(type, 'play')"
+    />
     <video
       v-if="type == 'videoPlayer'"
       :id="domElement"
@@ -55,7 +70,7 @@
       <div
         v-if="config.controls.progressBar"
         class="custom-video-progress"
-        v-on:click="updateCurrentPos"
+        v-on:click="controls(type, 'updateCurrentProgress', $event)"
         v-on:pointerover="ePointerover"
         v-on:pointerdown="ePointerdown"
         v-on:pointerup="ePointerup"
@@ -63,7 +78,7 @@
       >
         <div class="custom-video-progress-filled bg-blue-600"></div>
       </div>
-      <div class="flex justify-start flex-wrap">
+      <div class="flex justify-start flex-wrap py-1">
         <div
           v-if="config.controls.play"
           class="flex custom-video-player-button toggle self-center justify-center flex-1"
@@ -174,7 +189,7 @@
             :class="
               MediaPlayer[`${domElement}_klausPlayer`]?.playBackRateValue ==
               0.25
-                ? 'bg-[#4d49ef]'
+                ? '!bg-[#4d49ef]'
                 : ''
             "
             v-on:click="controls(type, 'rate', 0.25)"
@@ -288,7 +303,7 @@
         ></inline-svg>
       </div>
       <div
-        class="custom-video-player-button toggle self-center justify-center hidden md:flex"
+        class="custom-video-player-button toggle self-center justify-center hidden md:flex py-1"
         v-on:click="controls(type, 'fullscreen')"
       >
         <inline-svg
@@ -338,13 +353,13 @@ export default {
       volumenValue: undefined,
       playBackRateValue: 1,
       //
-      forward: false,
+      forwardBackward: false,
       backward: false,
       play: false,
       duration: undefined,
       pause: false,
       valuePercentaje: undefined,
-      isNewTime: false,
+      rate: false,
       lottieAnimation: undefined,
       myVideo: undefined,
       myAudio: undefined,
@@ -355,6 +370,7 @@ export default {
       destroy: true,
       widthThreeJS: 1270,
       heightThreeJS: 720,
+      valueForwardBackward: 0,
     };
   },
   methods: {
@@ -364,7 +380,8 @@ export default {
         return utils.controlsLottie(
           this.lottieAnimation,
           controlAction,
-          this.valuePercentaje
+          this.domElement,
+          params
         );
       }
 
@@ -380,19 +397,59 @@ export default {
       if (type == "AnimationMixer") {
         let controlsThreeJS = {
           play: () => {
-            this.play = true;
+            let playActive =
+              this.MediaPlayer[`${this.domElement}_klausPlayer`].playActive;
+
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateButtom",
+              val: false,
+            });
+
+            if (playActive) {
+              this.pause = true;
+            } else {
+              this.play = true;
+              this.pause = false;
+            }
+
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playActive",
+              val: !this.MediaPlayer[`${this.domElement}_klausPlayer`]
+                .playActive,
+            });
           },
           pause: () => {
             this.pause = true;
           },
-          backward: () => {
-            this.backward = true;
+
+          activeRate: () => {
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateButtom",
+              val: !this.MediaPlayer[`${this.domElement}_klausPlayer`]
+                .playBackRateButtom,
+            });
           },
-          forward: () => {
-            this.forward = true;
+
+          rate: () => {
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateValue",
+              val: params,
+            });
+            this.rate = true;
           },
-          percentaje: () => {
-            this.isNewTime = true;
+          forwardBackward: () => {
+            this.valueForwardBackward = params;
+            this.forwardBackward = true;
+          },
+          fullscreen: () => {
+            utils.fullScreen(
+              this.MediaPlayer[`${this.domElement}_klausPlayer`],
+              this.domElement
+            );
           },
         };
 
@@ -429,7 +486,6 @@ export default {
           1000
         );
 
-        console.log("this.canvas", this.canvas);
         this.render = new THREE.WebGLRenderer({
           canvas: this.canvas,
           antialias: true,
@@ -505,29 +561,60 @@ export default {
 
         if (mode == "static") return render();
 
-        if (this.isNewTime) {
-          let percentageValue = this.duration * (this.valuePercentaje / 100);
-          mixer.setTime(percentageValue);
-          mixer._actions[0].time = percentageValue;
+        if (this.rate) {
+          mixer.timeScale =
+            this.MediaPlayer[
+              `${this.domElement}_klausPlayer`
+            ].playBackRateValue;
 
-          animation.paused = false;
-          mixer.timeScale = 1;
-
-          this.isNewTime = false;
+          this.rate = false;
         }
 
-        if (this.forward) {
-          let percentage = duration * 0.1;
+        if (this.forwardBackward) {
+          let playActive =
+            this.MediaPlayer[`${this.domElement}_klausPlayer`].playActive;
+
+          let percentage = (duration * this.valueForwardBackward) / 100;
 
           let newtime =
-            percentage + mixer._actions[0].time > duration
+            mixer._actions[0].time + percentage < 0
+              ? 0
+              : mixer._actions[0].time + percentage >= duration
               ? duration
               : percentage + mixer._actions[0].time;
-
-          mixer.setTime(newtime);
+          /*  console.log({
+            mixer,
+            newtime,
+            percentage,
+            mixerTime: mixer._actions[0].time,
+          }); */
           mixer._actions[0].time = newtime;
+          mixer.time = newtime;
+          //mixer.setTime(newtime);
 
-          this.forward = false;
+          mixer._actions[0].paused = false;
+          animation.paused = false;
+
+          if (!playActive) {
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "playBackRateValue",
+              val: 1,
+            });
+          }
+
+          mixer.timeScale =
+            this.MediaPlayer[
+              `${this.domElement}_klausPlayer`
+            ].playBackRateValue;
+
+          this.$store.dispatch("UPDATE_state", {
+            parent: `${this.domElement}_klausPlayer`,
+            key: "playActive",
+            val: true,
+          });
+
+          this.forwardBackward = false;
         }
 
         //Backward 10%
@@ -539,32 +626,69 @@ export default {
               ? 0
               : mixer._actions[0].time - percentage;
 
-          mixer.setTime(newTime);
+          //mixer.setTime(newTime);
           mixer._actions[0].time = newTime;
-          animation.paused = false;
-          mixer.timeScale = 1;
 
           this.backward = false;
         }
 
         //Pause animation
-        if (this.pause) {
-          mixer.timeScale = 0;
-          this.pause = false;
+        if (mixer) {
+          if (this.pause) {
+            mixer.timeScale = 0;
+          }
         }
 
         //Play animation
         if (this.play) {
-          mixer.timeScale = 1;
+          mixer.timeScale =
+            this.MediaPlayer[
+              `${this.domElement}_klausPlayer`
+            ].playBackRateValue;
           this.play = false;
         }
 
         //Mixer de animacion
         if (mixer) {
-          if (Math.round(mixer.time) >= duration) {
-            mixer._actions[0].time = duration;
-            mixer.timeScale = 0;
+          //mixer._actions[0].time = 0;
+          // console.log("mixer actiontime: ", mixer._actions[0].time);
+          animation.paused = false;
+          // console.log("MIXER:", mixer);
+          if (this.config.loop) {
+            if (Math.round(mixer.time) >= duration) {
+              mixer.time = 0;
+              mixer._actions[0].time = 0;
+              mixer._actions[0].paused = false;
+              mixer.timeScale =
+                this.MediaPlayer[
+                  `${this.domElement}_klausPlayer`
+                ].playBackRateValue;
+
+              //mixer.timeScale = 1;
+            }
+
+            // mixer.timeScale = 1;
+          } else {
+            if (Math.round(mixer.time) >= duration) {
+              mixer._actions[0].time = duration;
+              mixer._actions[0].paused = false;
+              mixer.timeScale = 0;
+
+              //End animation set play false
+
+              this.$store.dispatch("UPDATE_state", {
+                parent: `${this.domElement}_klausPlayer`,
+                key: "playActive",
+                val: false,
+              });
+              this.$store.dispatch("UPDATE_state", {
+                parent: `${this.domElement}_klausPlayer`,
+                key: "playBackRateValue",
+                val: 0,
+              });
+            }
           }
+
           mixer.update(clock.getDelta());
         }
 
@@ -620,10 +744,49 @@ export default {
     //ThreeJs
     if (this.type == "AnimationMixer") {
       this.initThreeJs();
+      const init = {
+        durationPlayer: "&nbsp;/&nbsp;0:00",
+        playBackRateButtom: false,
+        playActive: false,
+        progression: undefined,
+        StatusAudio: undefined,
+        valorOldVolume: 1,
+        volumenValue: undefined,
+        playBackRateValue: 1,
+        seconds: undefined,
+        minutes: undefined,
+        currentTime: "0:00",
+      };
+
+      const elementsThreejs = {
+        media: document.querySelector(`canvas#${this.domElement}`),
+        mediaWrapper: document.querySelector(
+          `#${this.domElement}.custom-video`
+        ),
+      };
+
+      this.$store.dispatch("UPDATE_state", {
+        key: [`${this.domElement}_klausPlayer`],
+        val: { ...elementsThreejs, ...init },
+      });
+
+      if (this.config.autoplay) {
+        this.$store.dispatch("UPDATE_state", {
+          parent: `${this.domElement}_klausPlayer`,
+          key: "playActive",
+          val: true,
+        });
+      } else {
+        this.pause = true;
+      }
     }
     //Lottie
     if (this.type == "lottieFiles") {
-      this.lottieAnimation = utils.initLottie(this.domElement, this.source);
+      this.lottieAnimation = utils.initLottie(
+        this.domElement,
+        this.source,
+        this.config
+      );
     }
     //Video
     if (this.type == "videoPlayer") {
@@ -643,6 +806,15 @@ export default {
       this.destroy = false;
     }
     if (this.type == "videoPlayer" || this.type == "audioPlayer") {
+      clearInterval(
+        this.MediaPlayer[`${this.domElement}_klausPlayer`].progression
+      );
+      this.$store.dispatch("UPDATE_state", {
+        key: `${this.domElement}_klausPlayer`,
+        val: undefined,
+      });
+    }
+    if (this.type == "lottieFiles") {
       clearInterval(
         this.MediaPlayer[`${this.domElement}_klausPlayer`].progression
       );

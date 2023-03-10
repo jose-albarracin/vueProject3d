@@ -15,14 +15,46 @@ const init = {
   currentTime: "0:00",
 };
 
-function initLottie(element, source) {
-  return lottie.loadAnimation({
-    container: document.getElementById(`${element}`),
-    renderer: "svg",
-    loop: false,
-    autoplay: true,
-    path: `${source}`,
+function initLottie(element, source, config) {
+  let { dispatch } = store;
+
+  let obj = {
+    media: lottie.loadAnimation({
+      container: document.querySelector(`#${element}.lottieRef`),
+      renderer: "svg",
+      loop: config.loop,
+      autoplay: config.autoplay,
+      path: `${source}`,
+    }),
+    mediaWrapper: document.querySelector(`#${element}.custom-video`),
+    controlVolume: document.querySelector(
+      `#${element} .custom-video-player-slider[name="volume"]`
+    ),
+    progressBar: document.querySelector(
+      `#${element} .custom-video-progress-filled`
+    ),
+  };
+
+  dispatch("UPDATE_state", {
+    key: [`${element}_klausPlayer`],
+    val: { ...obj, ...init },
   });
+
+  dispatch("UPDATE_state", {
+    parent: `${element}_klausPlayer`,
+    key: "playBackRateValue",
+    val: 1,
+  });
+  if (config.autoplay) {
+    controlsLottie(obj, "play", element);
+    dispatch("UPDATE_state", {
+      parent: `${element}_klausPlayer`,
+      key: "playActive",
+      val: true,
+    });
+  }
+
+  return obj;
 }
 
 function initVideoPlayer(element, config) {
@@ -56,9 +88,9 @@ function initVideoPlayer(element, config) {
     obj.video.volume = obj.controlVolume.value;
   }
 
-  if (config.autoplay) {
+  /*  if (config.autoplay) {
     controlsVideAndAudioPlayer(obj, "play", element);
-  }
+  } */
 
   dispatch("UPDATE_state", {
     parent: `${element}_klausPlayer`,
@@ -131,44 +163,121 @@ function initAudioPlayer(element, config) {
 
 //CONTROLS
 
-function controlsLottie(lottie, control, valuePercentaje) {
-  let currentFrame = lottie.currentFrame;
-  let totalFrames = lottie.totalFrames;
+function controlsLottie(sourceMedia, control, element, params) {
+  const { media, mediaWrapper, progressBar } = sourceMedia;
+
+  let { dispatch, getters } = store;
+
+  let { MediaPlayer } = getters;
+
+  let updateProgress = () => {
+    let progress = media.currentFrame / media.totalFrames;
+    progressBar.style.flexBasis = Math.floor(progress * 1000) / 10 + "%";
+
+    currentTimeAndDuration();
+  };
+  ///
+  let currentTimeAndDuration = () => {
+    dispatch("UPDATE_state", {
+      parent: `${element}_klausPlayer`,
+      key: "currentTime",
+      val: Math.floor(media.currentFrame),
+    });
+    dispatch("UPDATE_state", {
+      parent: `${element}_klausPlayer`,
+      key: "durationPlayer",
+      val: " &nbsp;/&nbsp;" + media.totalFrames,
+    });
+  };
 
   if (control == "play") {
-    lottie.play();
+    if (media.isPaused) {
+      media.play();
+      dispatch("UPDATE_state", {
+        parent: `${element}_klausPlayer`,
+        key: "playActive",
+        val: !MediaPlayer[`${element}_klausPlayer`].playActive,
+      });
+
+      dispatch("UPDATE_state", {
+        parent: `${element}_klausPlayer`,
+        key: "progression",
+        val: window.setInterval(updateProgress, 10),
+      });
+    } else {
+      media.pause();
+      dispatch("UPDATE_state", {
+        parent: `${element}_klausPlayer`,
+        key: "playActive",
+        val: !MediaPlayer[`${element}_klausPlayer`].playActive,
+      });
+      clearInterval(MediaPlayer[`${element}_klausPlayer`].progression);
+    }
     return;
   }
+  if (control == "updateCurrentProgress") {
+    dispatch("UPDATE_state", {
+      parent: `${element}_klausPlayer`,
+      key: "playBackRateButtom",
+      val: false,
+    });
 
-  if (control == "pause") {
-    lottie.pause();
-    return;
+    let newProgress =
+      (params.clientX - mediaWrapper.getBoundingClientRect().left) /
+      mediaWrapper.clientWidth;
+
+    progressBar.style.flexBasis = Math.floor(newProgress * 1000) / 10 + "%";
+
+    let finalProgress = newProgress * media.totalFrames;
+    if (media.isPaused) {
+      media.goToAndStop(finalProgress, true);
+    } else {
+      media.goToAndPlay(finalProgress, true);
+    }
+
+    currentTimeAndDuration();
   }
 
-  if (control == "backward") {
-    let percentageFrame = totalFrames * 0.1;
+  if (control == "forwardBackward") {
+    let percentageFrame = (media.totalFrames * params) / 100;
+
     let newFrame =
-      currentFrame - percentageFrame < 0 ? 0 : currentFrame - percentageFrame;
-    lottie.goToAndPlay(newFrame, true);
+      media.currentFrame + percentageFrame < 0
+        ? 0
+        : media.currentFrame + percentageFrame > media.totalFrames
+        ? media.totalFrames
+        : media.currentFrame + percentageFrame;
+
+    if (media.isPaused) {
+      media.goToAndStop(newFrame, true);
+      updateProgress();
+    } else {
+      media.goToAndPlay(newFrame, true);
+    }
+  }
+
+  if (control == "rate") {
+    dispatch("UPDATE_state", {
+      parent: `${element}_klausPlayer`,
+      key: "playBackRateValue",
+      val: params,
+    });
+
+    media.setSpeed(params);
     return;
   }
 
-  if (control == "forward") {
-    let percentageFrame = totalFrames * 0.1;
-    let newFrame =
-      currentFrame + percentageFrame > totalFrames
-        ? totalFrames
-        : currentFrame + percentageFrame;
-    lottie.goToAndPlay(newFrame, true);
+  if (control == "activeRate") {
+    dispatch("UPDATE_state", {
+      parent: `${element}_klausPlayer`,
+      key: "playBackRateButtom",
+      val: !MediaPlayer[`${element}_klausPlayer`].playBackRateButtom,
+    });
     return;
   }
 
-  if (control == "percentaje") {
-    let totalFrames = lottie.totalFrames;
-
-    let newFrame = totalFrames * (valuePercentaje / 100);
-    lottie.goToAndPlay(newFrame, true);
-    return;
+  if (control == "fullscreen") {
+    fullScreen(sourceMedia, element);
   }
 }
 
@@ -230,7 +339,6 @@ function controlsVideAndAudioPlayer(sourceMedia, control, element, params) {
 
     if (media.paused) {
       media.play();
-      console.log("ENTRÉ EN PLAY");
 
       dispatch("UPDATE_state", {
         parent: `${element}_klausPlayer`,
@@ -371,6 +479,21 @@ function controlsVideAndAudioPlayer(sourceMedia, control, element, params) {
     currentTimeAndDuration();
   }
 
+  if (control == "fullscreen") {
+    fullScreen(sourceMedia, element);
+  }
+}
+
+function fullScreen(sourceMedia, element) {
+  //console.log("DATA: ", sourceMedia, "", element);
+  let { dispatch } = store;
+  const { media, mediaWrapper } = sourceMedia;
+
+  dispatch("UPDATE_state", {
+    parent: `${element}_klausPlayer`,
+    key: "playBackRateButtom",
+    val: false,
+  });
   let isFullScreen = () => {
     return !!(
       document.fullScreen ||
@@ -381,45 +504,33 @@ function controlsVideAndAudioPlayer(sourceMedia, control, element, params) {
     );
   };
   let setFullscreenData = (state) => {
-    const vidWrapper = document.querySelector(
-      `#${this.domElement}.custom-video`
-    );
-    vidWrapper.setAttribute("data-fullscreen", !!state);
+    mediaWrapper.setAttribute("data-fullscreen", !!state);
   };
 
-  if (control == "fullscreen") {
-    dispatch("UPDATE_state", {
-      parent: `${element}_klausPlayer`,
-      key: "playBackRateButtom",
-      val: false,
-    });
-
-    if (isFullScreen()) {
-      // ...exit fullscreen mode
-      // (Note: this can only be called on myVid)
-      //myVid.webkitCancelFullScreen()
-      if (document.exitFullscreen) document.exitFullscreen();
-      else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-      else if (document.webkitCancelFullScreen)
-        document.webkitCancelFullScreen();
-      else if (document.msExitFullscreen) document.msExitFullscreen();
-      setFullscreenData(false);
-    } else {
-      // ...otherwise enter fullscreen mode
-      // (Note: can be called on myVid, but here the specific element is used as it will also ensure that the element's children, e.g. the custom controls, go fullscreen also)
-      if (mediaWrapper.requestFullscreen) mediaWrapper.requestFullscreen();
-      else if (mediaWrapper.mozRequestFullScreen)
-        mediaWrapper.mozRequestFullScreen();
-      else if (mediaWrapper.webkitRequestFullScreen) {
-        // Safari 5.1 only allows proper fullscreen on the video element. This also works fine on other WebKit browsers as the following CSS (set in styles.css) hides the default controls that appear again, and
-        // ensures that our custom controls are visible:
-        // figure[data-fullscreen=true] video::-webkit-media-controls { display:none !important; }
-        // figure[data-fullscreen=true] .controls { z-index:2147483647; }
-        media.webkitRequestFullScreen();
-      } else if (mediaWrapper.msRequestFullscreen)
-        mediaWrapper.msRequestFullscreen();
-      setFullscreenData(true);
-    }
+  if (isFullScreen()) {
+    // ...exit fullscreen mode
+    // (Note: this can only be called on myVid)
+    //myVid.webkitCancelFullScreen()
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+    else if (document.webkitCancelFullScreen) document.webkitCancelFullScreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+    setFullscreenData(false);
+  } else {
+    // ...otherwise enter fullscreen mode
+    // (Note: can be called on myVid, but here the specific element is used as it will also ensure that the element's children, e.g. the custom controls, go fullscreen also)
+    if (mediaWrapper.requestFullscreen) mediaWrapper.requestFullscreen();
+    else if (mediaWrapper.mozRequestFullScreen)
+      mediaWrapper.mozRequestFullScreen();
+    else if (mediaWrapper.webkitRequestFullScreen) {
+      // Safari 5.1 only allows proper fullscreen on the video element. This also works fine on other WebKit browsers as the following CSS (set in styles.css) hides the default controls that appear again, and
+      // ensures that our custom controls are visible:
+      // figure[data-fullscreen=true] video::-webkit-media-controls { display:none !important; }
+      // figure[data-fullscreen=true] .controls { z-index:2147483647; }
+      media.webkitRequestFullScreen();
+    } else if (mediaWrapper.msRequestFullscreen)
+      mediaWrapper.msRequestFullscreen();
+    setFullscreenData(true);
   }
 }
 
@@ -430,4 +541,5 @@ export default {
 
   controlsLottie,
   controlsVideAndAudioPlayer,
+  fullScreen,
 };

@@ -8,22 +8,43 @@
       </button>
     </router-link>
     <div class="flex justify-center items-center h-full">
-      <div class="w-9/12 h-fit" id="lottie2" />
+      <ControlAnimations
+        classes="w-1/2"
+        source="/lottieFiles/72765-work-from-home.json"
+        domElement="lotte1"
+        type="lottieFiles"
+        :config="{
+          controls: {
+            play: true,
+            volumen: false,
+            backward: true,
+            forward: true,
+            fullscreen: true,
+            playbackRate: true,
+            progressBar: true,
+            time: true,
+          },
+          loop: true,
+          autoplay: true,
+          muted: false,
+        }"
+      ></ControlAnimations>
     </div>
-    <controlAnimations
+
+    <!--  <controlAnimations
       type="lottieFiles"
       source="/lottieFiles/72765-work-from-home.json"
       domElement="lottie2"
-    ></controlAnimations>
+    ></controlAnimations> -->
   </div>
 </template>
 
 <script>
-import controlAnimations from "@/components/controlAnimations.vue";
+import ControlAnimations from "@/components/controlAnimations.vue";
 export default {
   name: "lottieExample0",
   components: {
-    controlAnimations,
+    ControlAnimations,
   },
   props: {},
   data() {
