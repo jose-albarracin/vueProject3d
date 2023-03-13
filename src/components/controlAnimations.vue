@@ -361,6 +361,9 @@ export default {
       valuePercentaje: undefined,
       rate: false,
       lottieAnimation: undefined,
+      threeJS: undefined,
+      updateProgress: false,
+      clientEvents: undefined,
       myVideo: undefined,
       myAudio: undefined,
       myMedia: undefined,
@@ -441,6 +444,11 @@ export default {
             });
             this.rate = true;
           },
+          updateCurrentProgress: () => {
+            this.clientEvents = params;
+            this.updateProgress = true;
+          },
+
           forwardBackward: () => {
             this.valueForwardBackward = params;
             this.forwardBackward = true;
@@ -582,12 +590,7 @@ export default {
               : mixer._actions[0].time + percentage >= duration
               ? duration
               : percentage + mixer._actions[0].time;
-          /*  console.log({
-            mixer,
-            newtime,
-            percentage,
-            mixerTime: mixer._actions[0].time,
-          }); */
+
           mixer._actions[0].time = newtime;
           mixer.time = newtime;
           //mixer.setTime(newtime);
@@ -650,8 +653,49 @@ export default {
 
         //Mixer de animacion
         if (mixer) {
-          //mixer._actions[0].time = 0;
-          // console.log("mixer actiontime: ", mixer._actions[0].time);
+          let currentTimeAndDuration = () => {
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "currentTime",
+              val: Math.floor(mixer._actions[0].time),
+            });
+
+            this.$store.dispatch("UPDATE_state", {
+              parent: `${this.domElement}_klausPlayer`,
+              key: "durationPlayer",
+              val: " &nbsp;/&nbsp;" + Math.floor(this.duration),
+            });
+          };
+          let updateProgress = () => {
+            let progress =
+              this.MediaPlayer[`${this.domElement}_klausPlayer`].currentTime /
+              this.duration;
+
+            //console.log("progress", progress);
+            this.threeJS.progressBar.style.flexBasis =
+              Math.floor(progress * 1000) / 10 + "%";
+
+            currentTimeAndDuration();
+          };
+
+          updateProgress();
+
+          if (this.updateProgress) {
+            let newProgress =
+              (this.clientEvents.clientX -
+                this.threeJS.mediaWrapper.getBoundingClientRect().left) /
+              this.threeJS.mediaWrapper.clientWidth;
+            this.threeJS.progressBar.style.flexBasis =
+              Math.floor(newProgress * 1000) / 10 + "%";
+
+            console.log("Action: ", newProgress);
+            mixer.time = newProgress * this.duration;
+            mixer._actions[0].time = newProgress * this.duration;
+            currentTimeAndDuration();
+
+            this.updateProgress = false;
+          }
+
           animation.paused = false;
           // console.log("MIXER:", mixer);
           if (this.config.loop) {
@@ -763,7 +807,12 @@ export default {
         mediaWrapper: document.querySelector(
           `#${this.domElement}.custom-video`
         ),
+        progressBar: document.querySelector(
+          `#${this.domElement} .custom-video-progress-filled`
+        ),
       };
+
+      this.threeJS = elementsThreejs;
 
       this.$store.dispatch("UPDATE_state", {
         key: [`${this.domElement}_klausPlayer`],
