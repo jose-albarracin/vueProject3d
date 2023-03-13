@@ -3,8 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 
 const Home = () => import("@/views/Home.vue");
 const ExampleOne = () => import("@/views/exampleOne.vue");
-const ExampleTwo = () => import("@/views/exampleTwo.vue");
-const ExampleThree = () => import("@/views/exampleThree.vue");
+
 const ExampleFour = () => import("@/views/exampleFour.vue");
 const lottieExample0 = () => import("@/views/lottieExample0.vue");
 const videoPlayerExample = () => import("@/views/videoPlayerExample.vue");
@@ -22,16 +21,6 @@ const routes = [
     path: "/exampleone",
     name: "exampleone",
     component: ExampleOne,
-  },
-  {
-    path: "/exampletwo",
-    name: "exampletwo",
-    component: ExampleTwo,
-  },
-  {
-    path: "/examplethree",
-    name: "examplethree",
-    component: ExampleThree,
   },
   {
     path: "/examplefour",

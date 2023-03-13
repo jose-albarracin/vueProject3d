@@ -8,7 +8,7 @@
       </button>
     </router-link>
     <div class="flex justify-center items-center h-full">
-      <ControlAnimations
+      <MediaPlayer
         classes="w-1/2"
         source="/lottieFiles/72765-work-from-home.json"
         domElement="lotte1"
@@ -28,23 +28,23 @@
           autoplay: true,
           muted: false,
         }"
-      ></ControlAnimations>
+      ></MediaPlayer>
     </div>
 
-    <!--  <controlAnimations
+    <!--  <MediaPlayer
       type="lottieFiles"
       source="/lottieFiles/72765-work-from-home.json"
       domElement="lottie2"
-    ></controlAnimations> -->
+    ></MediaPlayer> -->
   </div>
 </template>
 
 <script>
-import ControlAnimations from "@/components/controlAnimations.vue";
+import MediaPlayer from "@/components/MediaPlayer.vue";
 export default {
   name: "lottieExample0",
   components: {
-    ControlAnimations,
+    MediaPlayer,
   },
   props: {},
   data() {

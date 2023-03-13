@@ -9,7 +9,7 @@
     </router-link>
     <div class="container max-w-6xl mx-auto">
       <div class="flex justify-center">
-        <ControlAnimations
+        <MediaPlayer
           classes="w-1/2 "
           source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
           domElement="video1"
@@ -29,10 +29,10 @@
             autoplay: false,
             muted: false,
           }"
-        ></ControlAnimations>
+        ></MediaPlayer>
       </div>
       <div class="flex justify-center">
-        <ControlAnimations
+        <MediaPlayer
           classes="w-1/2"
           source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
           domElement="video2"
@@ -52,19 +52,19 @@
             autoplay: false,
             muted: false,
           }"
-        ></ControlAnimations>
+        ></MediaPlayer>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import ControlAnimations from "@/components/controlAnimations.vue";
+import MediaPlayer from "@/components/MediaPlayer.vue";
 export default {
   name: "videoPlayerExample",
   props: {},
   components: {
-    ControlAnimations,
+    MediaPlayer,
   },
   data() {
     return {};

@@ -9,7 +9,7 @@
     </router-link>
     <div class="flex w-full flex-col h-screen items-center justify-center">
       <div class="flex w-full justify-center">
-        <ControlAnimations
+        <MediaPlayer
           classes="w-1/2 aspect-video"
           source="http://physical-authority.surge.sh/music/2.mp3"
           domElement="Audio1"
@@ -29,19 +29,19 @@
             autoplay: true,
             muted: false,
           }"
-        ></ControlAnimations>
+        ></MediaPlayer>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import ControlAnimations from "@/components/controlAnimations.vue";
+import MediaPlayer from "@/components/MediaPlayer.vue";
 export default {
   name: "audioPlayerExample",
   props: {},
   components: {
-    ControlAnimations,
+    MediaPlayer,
   },
   data() {
     return {};
