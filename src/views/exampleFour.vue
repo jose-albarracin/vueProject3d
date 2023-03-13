@@ -9,7 +9,7 @@
     </router-link>
     <div class="container mx-auto max-w-6xl px-3 my-9">
       <div class="flex justify-center">
-        <ControlAnimations
+        <MediaPlayer
           classes="w-full "
           source="models/buster_drone/scene.gltf"
           domElement="threejs1"
@@ -28,10 +28,9 @@
             },
             loop: true,
             autoplay: true,
-
             backgroundColor: '#9a9a9ab8',
           }"
-        ></ControlAnimations>
+        ></MediaPlayer>
       </div>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vel diam
@@ -90,12 +89,12 @@
 </template>
 
 <script>
-import ControlAnimations from "@/components/controlAnimations.vue";
+import MediaPlayer from "@/components/MediaPlayer.vue";
 
 export default {
   name: "exampleFour",
   components: {
-    ControlAnimations,
+    MediaPlayer,
   },
   props: {
     msg: String,
