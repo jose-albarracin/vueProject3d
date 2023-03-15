@@ -1,6 +1,6 @@
 <template>
   <div
-    class="custom-video custom-video-player"
+    class="custom-video custom-video-player min-h-[200px]"
     :class="classes"
     :id="domElement"
     v-on:pointerleave="ePointerleave"
@@ -27,7 +27,7 @@
     <transition name="fade">
       <div
         v-if="loader && config.loader"
-        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 w-full h-full flex items-center justify-center"
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 w-full h-full flex items-center justify-center z-50 min-h-[300px]"
       >
         <slot></slot>
       </div>
@@ -846,13 +846,16 @@ export default {
         this.source,
         this.config
       );
+
+      this.lottieAnimation.media.addEventListener("DOMLoaded", () => {
+        this.loader = false;
+      });
     }
     //Video
     if (this.type == "videoPlayer") {
       this.myMedia = utils.initVideoPlayer(this.domElement, this.config);
       this.myMedia.media.addEventListener("canplaythrough", (e) => {
         if (e.target.readyState === 4) {
-          console.log("canplaythrough---: ", e.target.readyState);
           this.loader = false;
         }
       });
@@ -864,7 +867,6 @@ export default {
 
       this.myMedia.media.addEventListener("canplaythrough", (e) => {
         if (e.target.readyState === 4) {
-          console.log("canplaythrough---: ", e.target.readyState);
           this.loader = false;
         }
       });

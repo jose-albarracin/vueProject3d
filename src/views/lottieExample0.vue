@@ -27,24 +27,27 @@
           loop: true,
           autoplay: true,
           muted: false,
+          loader: true,
         }"
+        ><inline-svg
+          src="images/loaderKlaus.svg"
+          class="w-[50%] h-fit"
+          fill="white"
+          aria-label="loader"
+        ></inline-svg
       ></MediaPlayer>
     </div>
-
-    <!--  <MediaPlayer
-      type="lottieFiles"
-      source="/lottieFiles/72765-work-from-home.json"
-      domElement="lottie2"
-    ></MediaPlayer> -->
   </div>
 </template>
 
 <script>
 import MediaPlayer from "@/components/MediaPlayer.vue";
+import InlineSvg from "vue-inline-svg";
 export default {
   name: "lottieExample0",
   components: {
     MediaPlayer,
+    InlineSvg,
   },
   props: {},
   data() {
