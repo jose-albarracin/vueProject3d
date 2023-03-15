@@ -28,8 +28,16 @@
             loop: true,
             autoplay: true,
             muted: false,
+            loader: true,
           }"
-        ></MediaPlayer>
+        >
+          <inline-svg
+            src="images/loaderKlaus.svg"
+            class="w-[50%] h-fit"
+            fill="white"
+            aria-label="fullscreen"
+          ></inline-svg>
+        </MediaPlayer>
       </div>
     </div>
   </div>
@@ -37,11 +45,13 @@
 
 <script>
 import MediaPlayer from "@/components/MediaPlayer.vue";
+import InlineSvg from "vue-inline-svg";
 export default {
   name: "audioPlayerExample",
   props: {},
   components: {
     MediaPlayer,
+    InlineSvg,
   },
   data() {
     return {};

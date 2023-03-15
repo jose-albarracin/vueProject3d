@@ -24,6 +24,15 @@
       }`,
     }"
   >
+    <transition name="fade">
+      <div
+        v-if="loader && config.loader"
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 w-full h-full flex items-center justify-center"
+      >
+        <slot></slot>
+      </div>
+    </transition>
+
     <div
       v-if="type == 'AnimationMixer'"
       id="parentThreeJS"
@@ -341,6 +350,7 @@ export default {
   },
   data() {
     return {
+      loader: true,
       drag: undefined,
       grap: undefined,
       currentTime: "0:00",
@@ -840,11 +850,24 @@ export default {
     //Video
     if (this.type == "videoPlayer") {
       this.myMedia = utils.initVideoPlayer(this.domElement, this.config);
+      this.myMedia.media.addEventListener("canplaythrough", (e) => {
+        if (e.target.readyState === 4) {
+          console.log("canplaythrough---: ", e.target.readyState);
+          this.loader = false;
+        }
+      });
     }
 
     //Audio
     if (this.type == "audioPlayer") {
       this.myMedia = utils.initAudioPlayer(this.domElement, this.config);
+
+      this.myMedia.media.addEventListener("canplaythrough", (e) => {
+        if (e.target.readyState === 4) {
+          console.log("canplaythrough---: ", e.target.readyState);
+          this.loader = false;
+        }
+      });
     }
   },
   beforeUnmount() {

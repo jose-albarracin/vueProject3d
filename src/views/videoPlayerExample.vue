@@ -10,29 +10,6 @@
     <div class="container max-w-6xl mx-auto">
       <div class="flex justify-center">
         <MediaPlayer
-          classes="w-1/2 "
-          source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-          domElement="video1"
-          type="videoPlayer"
-          :config="{
-            controls: {
-              play: true,
-              volumen: true,
-              backward: true,
-              forward: true,
-              fullscreen: true,
-              playbackRate: true,
-              progressBar: true,
-              time: true,
-            },
-            loop: true,
-            autoplay: false,
-            muted: false,
-          }"
-        ></MediaPlayer>
-      </div>
-      <div class="flex justify-center">
-        <MediaPlayer
           classes="w-1/2"
           source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
           domElement="video2"
@@ -51,7 +28,15 @@
             loop: true,
             autoplay: false,
             muted: false,
+            loader: true,
           }"
+        >
+          <inline-svg
+            src="images/loaderKlaus.svg"
+            class="w-[50%] h-fit"
+            fill="white"
+            aria-label="fullscreen"
+          ></inline-svg
         ></MediaPlayer>
       </div>
     </div>
@@ -60,11 +45,13 @@
 
 <script>
 import MediaPlayer from "@/components/MediaPlayer.vue";
+import InlineSvg from "vue-inline-svg";
 export default {
   name: "videoPlayerExample",
   props: {},
   components: {
     MediaPlayer,
+    InlineSvg,
   },
   data() {
     return {};
