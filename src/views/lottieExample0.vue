@@ -9,7 +9,7 @@
     </router-link>
     <div class="flex justify-center items-center h-full">
       <MediaPlayer
-        classes="w-1/2"
+        classes="w-full"
         source="/lottieFiles/72765-work-from-home.json"
         domElement="lotte1"
         type="lottieFiles"

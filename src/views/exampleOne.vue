@@ -22,7 +22,14 @@
             },
 
             backgroundColor: '#9a9a9ab8',
+            loader: true,
           }"
+          ><inline-svg
+            src="images/loaderKlaus.svg"
+            class="w-[50%] h-fit"
+            fill="white"
+            aria-label="loader"
+          ></inline-svg
         ></MediaPlayer>
       </div>
       <p>
@@ -83,10 +90,12 @@
 
 <script>
 import MediaPlayer from "@/components/MediaPlayer";
+import InlineSvg from "vue-inline-svg";
 export default {
   name: "exampleOne",
   components: {
     MediaPlayer,
+    InlineSvg,
   },
   props: {
     msg: String,

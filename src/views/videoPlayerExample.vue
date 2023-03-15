@@ -10,7 +10,7 @@
     <div class="container max-w-6xl mx-auto">
       <div class="flex justify-center">
         <MediaPlayer
-          classes="w-1/2"
+          classes="w-full"
           source="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
           domElement="video2"
           type="videoPlayer"

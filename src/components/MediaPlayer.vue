@@ -26,10 +26,16 @@
   >
     <transition name="fade">
       <div
-        v-if="loader && config.loader"
+        v-if="config.loader && loader"
         class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 w-full h-full flex items-center justify-center z-50 min-h-[300px]"
       >
-        <slot></slot>
+        <div class="relative w-full h-full flex">
+          <slot> </slot>
+          <span
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-extrabold"
+            >{{ loaderPercentage }}%</span
+          >
+        </div>
       </div>
     </transition>
 
@@ -351,6 +357,7 @@ export default {
   data() {
     return {
       loader: true,
+      loaderPercentage: 0,
       drag: undefined,
       grap: undefined,
       currentTime: "0:00",
@@ -541,14 +548,59 @@ export default {
             }
           },
           // called while loading is progressing
-          function (xhr) {
-            console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-          },
+          /*   function (xhr) {
+            // console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+          }, */
           // called when loading has errors
           function (error) {
             console.log("An error happened: ", error);
           }
         );
+        THREE.DefaultLoadingManager.onStart = function (
+          url,
+          itemsLoaded,
+          itemsTotal
+        ) {
+          console.log("porcentaje: ", (itemsLoaded * 100) / itemsTotal);
+
+          console.log(
+            "Started loading file: " +
+              url +
+              ".\nLoaded " +
+              itemsLoaded +
+              " of " +
+              itemsTotal +
+              " files."
+          );
+        };
+
+        THREE.DefaultLoadingManager.onLoad = () => {
+          console.log("Loading Complete!");
+
+          this.loader = false;
+        };
+
+        THREE.DefaultLoadingManager.onProgress = (
+          url,
+          itemsLoaded,
+          itemsTotal
+        ) => {
+          this.loaderPercentage = Math.floor((itemsLoaded * 100) / itemsTotal);
+          console.log("porcentaje: ", (itemsLoaded * 100) / itemsTotal);
+          console.log(
+            "Loading file: " +
+              url +
+              ".\nLoaded " +
+              itemsLoaded +
+              " of " +
+              itemsTotal +
+              " files."
+          );
+        };
+
+        THREE.DefaultLoadingManager.onError = function (url) {
+          console.log("There was an error loading " + url);
+        };
 
         //loader = null;
 
